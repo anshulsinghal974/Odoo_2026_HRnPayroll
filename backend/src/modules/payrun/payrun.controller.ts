@@ -218,3 +218,18 @@ export async function downloadPayslipPdfHandler(req: Request, res: Response): Pr
     res.status(error.statusCode || 500).json({ error: error.message || 'Failed to generate payslip PDF' });
   }
 }
+
+/**
+ * POST /api/payruns/:id/send OR POST /api/payruns/:id/send-payslips
+ * Bulk email payslips to all employees for a validated/paid payrun
+ */
+export async function sendBulkPayslipsHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const id = req.params.id as string;
+    const { sendBulkPayslipsForPayrun } = await import('../../services/email.service');
+    const report = await sendBulkPayslipsForPayrun(id);
+    res.status(200).json(report);
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to send bulk payslips' });
+  }
+}

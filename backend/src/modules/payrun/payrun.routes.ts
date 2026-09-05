@@ -13,6 +13,7 @@ import {
   validatePayrunHandler,
   markPayrunPaidHandler,
   downloadPayslipPdfHandler,
+  sendBulkPayslipsHandler,
 } from './payrun.controller';
 
 const router = Router();
@@ -83,6 +84,19 @@ router.post(
   '/payruns/:id/mark-paid',
   requireRoles(Role.HR_PAYROLL_MANAGER, Role.ADMIN),
   markPayrunPaidHandler
+);
+
+// Bulk Email Payslips (Validated or Paid payruns)
+router.post(
+  '/payruns/:id/send',
+  requireRoles(Role.HR_PAYROLL_MANAGER, Role.ADMIN),
+  sendBulkPayslipsHandler
+);
+
+router.post(
+  '/payruns/:id/send-payslips',
+  requireRoles(Role.HR_PAYROLL_MANAGER, Role.ADMIN),
+  sendBulkPayslipsHandler
 );
 
 // ──────────────────────────────────────────────
