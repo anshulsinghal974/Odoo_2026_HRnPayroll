@@ -9,6 +9,9 @@ import {
   getPayrunByIdHandler,
   computePayrunHandler,
   getPayslipByIdHandler,
+  getPayrunWarningsHandler,
+  validatePayrunHandler,
+  markPayrunPaidHandler,
 } from './payrun.controller';
 
 const router = Router();
@@ -58,6 +61,27 @@ router.post(
   '/payruns/:id/compute',
   requireRoles(Role.HR_PAYROLL_USER, Role.HR_PAYROLL_MANAGER, Role.ADMIN),
   computePayrunHandler
+);
+
+// Get Payroll Warnings & Readiness Score
+router.get(
+  '/payruns/:id/warnings',
+  requireRoles(Role.HR_PAYROLL_USER, Role.HR_PAYROLL_MANAGER, Role.ADMIN),
+  getPayrunWarningsHandler
+);
+
+// Validate Payrun (Computed -> Validated)
+router.post(
+  '/payruns/:id/validate',
+  requireRoles(Role.HR_PAYROLL_MANAGER, Role.ADMIN),
+  validatePayrunHandler
+);
+
+// Mark Payrun Paid (Validated -> Paid)
+router.post(
+  '/payruns/:id/mark-paid',
+  requireRoles(Role.HR_PAYROLL_MANAGER, Role.ADMIN),
+  markPayrunPaidHandler
 );
 
 // ──────────────────────────────────────────────

@@ -135,3 +135,49 @@ export async function getPayslipByIdHandler(req: Request, res: Response): Promis
     res.status(error.statusCode || 500).json({ error: error.message || 'Failed to get payslip' });
   }
 }
+
+/**
+ * GET /api/payruns/:id/warnings
+ * Get payroll readiness score and warnings report
+ */
+export async function getPayrunWarningsHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const id = req.params.id as string;
+    const warnings = await payrunService.getPayrunWarnings(id);
+    res.status(200).json(warnings);
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to get payrun warnings' });
+  }
+}
+
+/**
+ * POST /api/payruns/:id/validate
+ * Validate payrun (COMPUTED -> VALIDATED, runs warnings check first)
+ */
+export async function validatePayrunHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const id = req.params.id as string;
+    const validated = await payrunService.validatePayrun(id);
+    res.status(200).json(validated);
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({
+      error: error.message || 'Failed to validate payrun',
+      readinessScore: error.readinessScore,
+      warnings: error.warnings,
+    });
+  }
+}
+
+/**
+ * POST /api/payruns/:id/mark-paid
+ * Mark payrun as paid (VALIDATED -> PAID, immutable after)
+ */
+export async function markPayrunPaidHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const id = req.params.id as string;
+    const paid = await payrunService.markPayrunPaid(id);
+    res.status(200).json(paid);
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to mark payrun as paid' });
+  }
+}

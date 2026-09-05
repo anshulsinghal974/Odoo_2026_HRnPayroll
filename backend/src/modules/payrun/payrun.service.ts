@@ -495,3 +495,257 @@ export async function getPayslipById(id: string) {
 
   return payslip;
 }
+
+// ──────────────────────────────────────────────
+// Warning Detection & Readiness Scoring
+// ──────────────────────────────────────────────
+
+export interface PayrollWarning {
+  type: 'DUPLICATE_PAYSLIP' | 'MISSING_BANK_DETAILS' | 'EXPIRED_CONTRACT';
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  message: string;
+  employeeId?: string;
+  employeeName?: string;
+}
+
+export interface PayrunWarningsResult {
+  payrunId: string;
+  payrunName: string;
+  readinessScore: number;
+  hasBlockingErrors: boolean;
+  warnings: PayrollWarning[];
+}
+
+/**
+ * Detects payroll anomalies before validation:
+ * - Duplicate payslips across overlapping payrun periods
+ * - Missing bank account details
+ * - Expired or invalid contracts
+ * Computes a 0-100 readiness score.
+ */
+export async function getPayrunWarnings(payrunId: string): Promise<PayrunWarningsResult> {
+  const payrun = await prisma.payrun.findUnique({
+    where: { id: payrunId },
+    include: {
+      payslips: {
+        include: {
+          employee: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              bankAccount: true,
+              status: true,
+            },
+          },
+          contract: {
+            select: {
+              id: true,
+              name: true,
+              status: true,
+              startDate: true,
+              endDate: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!payrun) {
+    throw { statusCode: 404, message: 'Payrun not found' };
+  }
+
+  const warnings: PayrollWarning[] = [];
+
+  for (const payslip of payrun.payslips) {
+    const empName = `${payslip.employee.firstName} ${payslip.employee.lastName}`;
+
+    // 1. Check for duplicate payslips in overlapping payruns
+    const overlapping = await prisma.payslip.findFirst({
+      where: {
+        employeeId: payslip.employeeId,
+        payrunId: { not: payrun.id },
+        payrun: {
+          status: { in: [PayrunStatus.COMPUTED, PayrunStatus.VALIDATED, PayrunStatus.PAID] },
+          periodStart: { lte: payrun.periodEnd },
+          periodEnd: { gte: payrun.periodStart },
+        },
+      },
+      include: {
+        payrun: { select: { name: true } },
+      },
+    });
+
+    if (overlapping) {
+      warnings.push({
+        type: 'DUPLICATE_PAYSLIP',
+        severity: 'CRITICAL',
+        message: `Duplicate payslip: ${empName} already has a payslip in active payrun "${overlapping.payrun.name}" for an overlapping period`,
+        employeeId: payslip.employeeId,
+        employeeName: empName,
+      });
+    }
+
+    // 2. Check for missing bank details
+    if (!payslip.employee.bankAccount || payslip.employee.bankAccount.trim() === '') {
+      warnings.push({
+        type: 'MISSING_BANK_DETAILS',
+        severity: 'HIGH',
+        message: `Missing bank details: ${empName} has no bank account number on file`,
+        employeeId: payslip.employeeId,
+        employeeName: empName,
+      });
+    }
+
+    // 3. Check for expired or inactive contracts
+    if (!payslip.contract) {
+      warnings.push({
+        type: 'EXPIRED_CONTRACT',
+        severity: 'CRITICAL',
+        message: `No contract: ${empName} is missing an associated contract`,
+        employeeId: payslip.employeeId,
+        employeeName: empName,
+      });
+    } else if (payslip.contract.status !== 'ACTIVE') {
+      warnings.push({
+        type: 'EXPIRED_CONTRACT',
+        severity: 'CRITICAL',
+        message: `Invalid contract: Contract for ${empName} has status "${payslip.contract.status}"`,
+        employeeId: payslip.employeeId,
+        employeeName: empName,
+      });
+    } else if (payslip.contract.endDate && payslip.contract.endDate < payrun.periodEnd) {
+      warnings.push({
+        type: 'EXPIRED_CONTRACT',
+        severity: 'CRITICAL',
+        message: `Expired contract: Contract for ${empName} expired on ${payslip.contract.endDate.toISOString().split('T')[0]} before payrun period ended`,
+        employeeId: payslip.employeeId,
+        employeeName: empName,
+      });
+    }
+  }
+
+  // Calculate Readiness Score (0 - 100)
+  let scoreDeduction = 0;
+  for (const w of warnings) {
+    if (w.severity === 'CRITICAL') scoreDeduction += 25;
+    else if (w.severity === 'HIGH') scoreDeduction += 15;
+    else if (w.severity === 'MEDIUM') scoreDeduction += 10;
+    else if (w.severity === 'LOW') scoreDeduction += 5;
+  }
+
+  const readinessScore = Math.max(0, 100 - scoreDeduction);
+  const hasBlockingErrors = warnings.some((w) => w.severity === 'CRITICAL');
+
+  return {
+    payrunId: payrun.id,
+    payrunName: payrun.name,
+    readinessScore,
+    hasBlockingErrors,
+    warnings,
+  };
+}
+
+// ──────────────────────────────────────────────
+// Validate Payrun
+// ──────────────────────────────────────────────
+
+/**
+ * Validates a payrun (Computed → Validated).
+ * Runs warning detection logic; blocks validation if critical anomalies exist.
+ */
+export async function validatePayrun(id: string) {
+  const payrun = await prisma.payrun.findUnique({
+    where: { id },
+    include: {
+      payslips: { select: { id: true, status: true } },
+    },
+  });
+
+  if (!payrun) {
+    throw { statusCode: 404, message: 'Payrun not found' };
+  }
+
+  if (payrun.status !== PayrunStatus.COMPUTED) {
+    throw {
+      statusCode: 400,
+      message: `Cannot validate payrun with status "${payrun.status}". Payrun must be in COMPUTED status first.`,
+    };
+  }
+
+  // Run warning detection
+  const warningReport = await getPayrunWarnings(id);
+
+  if (warningReport.hasBlockingErrors) {
+    const criticalMessages = warningReport.warnings
+      .filter((w) => w.severity === 'CRITICAL')
+      .map((w) => w.message);
+
+    throw {
+      statusCode: 400,
+      message: `Payrun validation blocked due to ${criticalMessages.length} critical warning(s).`,
+      readinessScore: warningReport.readinessScore,
+      warnings: warningReport.warnings,
+    };
+  }
+
+  // Transition payrun and all payslips to VALIDATED
+  await prisma.$transaction(async (tx) => {
+    await tx.payrun.update({
+      where: { id },
+      data: { status: PayrunStatus.VALIDATED },
+    });
+
+    await tx.payslip.updateMany({
+      where: { payrunId: id },
+      data: { status: PayslipStatus.VALIDATED },
+    });
+  });
+
+  return getPayrunById(id);
+}
+
+// ──────────────────────────────────────────────
+// Mark-Paid Payrun
+// ──────────────────────────────────────────────
+
+/**
+ * Marks a payrun as paid (Validated → Paid).
+ * Once marked Paid, payrun is locked and immutable.
+ */
+export async function markPayrunPaid(id: string) {
+  const payrun = await prisma.payrun.findUnique({
+    where: { id },
+  });
+
+  if (!payrun) {
+    throw { statusCode: 404, message: 'Payrun not found' };
+  }
+
+  if (payrun.status === PayrunStatus.PAID) {
+    throw { statusCode: 400, message: 'Payrun is already marked as PAID' };
+  }
+
+  if (payrun.status !== PayrunStatus.VALIDATED) {
+    throw {
+      statusCode: 400,
+      message: `Cannot mark payrun as paid. Payrun must be in VALIDATED status (currently "${payrun.status}").`,
+    };
+  }
+
+  // Transition payrun and payslips to PAID
+  await prisma.$transaction(async (tx) => {
+    await tx.payrun.update({
+      where: { id },
+      data: { status: PayrunStatus.PAID },
+    });
+
+    await tx.payslip.updateMany({
+      where: { payrunId: id },
+      data: { status: PayslipStatus.PAID },
+    });
+  });
+
+  return getPayrunById(id);
+}
