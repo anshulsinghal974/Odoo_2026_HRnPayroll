@@ -8,8 +8,8 @@ import { LoginPage } from '../features/auth';
 import { EmployeeList } from '../features/employees';
 import { ContractsPage } from '../features/contracts';
 import { TimeOffPage } from '../features/timeoff';
+import { AttendancePage } from '../features/attendance';
 import {
-  AttendancePlaceholder,
   PayrollPlaceholder,
   ReportsPlaceholder,
 } from '../features/placeholders/Placeholders';
@@ -34,7 +34,7 @@ export function App() {
           <Route index element={<Navigate to="/employees" replace />} />
           <Route path="/employees" element={<EmployeeList />} />
           <Route path="/contracts" element={<ContractsPage />} />
-          <Route path="/attendance" element={<AttendancePlaceholder />} />
+          <Route path="/attendance" element={<AttendancePage />} />
           <Route path="/time-off" element={<TimeOffPage />} />
           <Route path="/payroll" element={<PayrollPlaceholder />} />
           <Route path="/reports" element={<ReportsPlaceholder />} />

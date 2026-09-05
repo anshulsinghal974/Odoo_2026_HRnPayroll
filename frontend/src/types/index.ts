@@ -153,3 +153,24 @@ export interface LeaveBalance {
   used: number;
   remaining: number;
 }
+
+// Attendance types
+export type AttendanceStatus = 'On Time' | 'Late' | 'Absent' | 'Overtime' | 'Missing Check-out';
+
+export interface Attendance extends BaseEntity {
+  employeeId: string;
+  employeeName: string;
+  checkIn: string; // ISO datetime
+  checkOut?: string; // ISO datetime, optional for missing check-out
+  workedHours?: number; // calculated, optional
+  status: AttendanceStatus;
+}
+
+export interface AttendanceAudit {
+  attendanceId: string;
+  field: 'checkIn' | 'checkOut' | 'status';
+  originalValue: string;
+  newValue: string;
+  correctedBy: string;
+  correctedAt: string; // ISO datetime
+}
