@@ -5,6 +5,8 @@ import { prisma } from './db/prisma';
 import authRoutes from './modules/auth/auth.routes';
 import employeeRoutes from './modules/employees/employee.routes';
 import contractRoutes from './modules/contracts/contract.routes';
+import scheduleRoutes from './modules/schedules/schedule.routes';
+import timeoffRoutes from './modules/timeoff/timeoff.routes';
 
 dotenv.config();
 
@@ -38,6 +40,8 @@ app.get('/health', async (req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/contracts', contractRoutes);
+app.use('/api/schedules', scheduleRoutes);
+app.use('/api', timeoffRoutes);
 
 // ──────────────────────────────────────────────
 // Global error handler
