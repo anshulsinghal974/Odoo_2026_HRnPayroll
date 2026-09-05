@@ -181,3 +181,40 @@ export async function markPayrunPaidHandler(req: Request, res: Response): Promis
     res.status(error.statusCode || 500).json({ error: error.message || 'Failed to mark payrun as paid' });
   }
 }
+
+/**
+ * GET /api/payslips/:id/pdf
+ * Download rendered payslip as a PDF
+ */
+export async function downloadPayslipPdfHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authReq = req as AuthRequest;
+    const id = req.params.id as string;
+
+    // Check ownership if EMPLOYEE
+    if (authReq.user && authReq.user.role === Role.EMPLOYEE) {
+      const { prisma } = await import('../../db/prisma');
+      const user = await prisma.user.findUnique({
+        where: { id: authReq.user.userId },
+        select: { employeeId: true },
+      });
+      const payslip = await prisma.payslip.findUnique({
+        where: { id },
+        select: { employeeId: true },
+      });
+      if (!payslip || payslip.employeeId !== user?.employeeId) {
+        res.status(403).json({ error: 'Forbidden: You can only download your own payslip' });
+        return;
+      }
+    }
+
+    const { generatePayslipPdf } = await import('../../services/pdf.service');
+    const pdfBuffer = await generatePayslipPdf(id);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="payslip-${id}.pdf"`);
+    res.status(200).send(pdfBuffer);
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to generate payslip PDF' });
+  }
+}

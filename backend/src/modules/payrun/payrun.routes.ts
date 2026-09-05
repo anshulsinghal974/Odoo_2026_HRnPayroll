@@ -12,6 +12,7 @@ import {
   getPayrunWarningsHandler,
   validatePayrunHandler,
   markPayrunPaidHandler,
+  downloadPayslipPdfHandler,
 } from './payrun.controller';
 
 const router = Router();
@@ -92,6 +93,12 @@ router.post(
 router.get(
   '/payslips/:id',
   getPayslipByIdHandler
+);
+
+// Download PDF (Employees can download own; HR Payroll & Admin can download any)
+router.get(
+  '/payslips/:id/pdf',
+  downloadPayslipPdfHandler
 );
 
 export default router;
