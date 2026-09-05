@@ -9,10 +9,10 @@ MODELS = {}
 
 def generate_synthetic_data():
     print("Generating synthetic training data...")
-    # Generate dummy salary data for forecast model
-    dates = pd.date_range(start="2023-01-01", periods=12, freq="M")
-    headcount = np.random.randint(50, 100, size=12)
-    salary_cost = headcount * 5000 + np.random.normal(0, 5000, size=12)
+    # Generate larger dummy salary data for forecast model
+    dates = pd.date_range(start="2020-01-01", periods=60, freq="M")
+    headcount = np.random.randint(50, 200, size=60)
+    salary_cost = headcount * 5500 + np.random.normal(0, 10000, size=60)
     
     df = pd.DataFrame({"headcount": headcount, "salary_cost": salary_cost})
     return df
