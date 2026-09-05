@@ -52,7 +52,30 @@ async def generate_payrun_warnings(payload: PayrunWarningRequest):
                     affectedEmployeeId=emp.employee_id
                 ))
                 
-    return PayrunWarningResponse(warnings=warnings)
+    # Calculate readiness score
+    score = 100
+    for w in warnings:
+        if w.severity == "High":
+            score -= 30
+        elif w.severity == "Medium":
+            score -= 15
+        elif w.severity == "Low":
+            score -= 5
+            
+    score = max(0, score)
+    
+    if score >= 80:
+        label = "Green"
+    elif score >= 50:
+        label = "Amber"
+    else:
+        label = "Red"
+                
+    return PayrunWarningResponse(
+        readiness_score=score,
+        readiness_label=label,
+        warnings=warnings
+    )
 
 @router.get("/{employee_id}")
 async def get_warnings(employee_id: str):

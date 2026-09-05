@@ -32,4 +32,6 @@ class WarningDetail(BaseModel):
     affectedEmployeeId: str
 
 class PayrunWarningResponse(BaseModel):
+    readiness_score: int
+    readiness_label: str
     warnings: List[WarningDetail]
