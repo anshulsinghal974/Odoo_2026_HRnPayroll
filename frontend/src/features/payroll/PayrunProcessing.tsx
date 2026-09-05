@@ -1,6 +1,6 @@
 // Payrun Processing Screen
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, Button, Badge, Spinner, Alert } from '../../components';
@@ -13,53 +13,58 @@ const STATUS_STEPS = ['Draft', 'Computed', 'Validated', 'Paid'] as const;
 type Status = typeof STATUS_STEPS[number];
 
 export const PayrunProcessing: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { payrunId } = useParams<{ payrunId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Load payrun details
+  // Load payrun details — React Query v5 object syntax
   const {
     data: payrun,
     isLoading: loadingPayrun,
     isError: errPayrun,
-  } = useQuery<Payrun>(
-    ['payrun', id],
-    () => getPayrun(id!),
-    { enabled: !!id }
-  );
+  } = useQuery<Payrun>({
+    queryKey: ['payrun', payrunId],
+    queryFn: () => getPayrun(payrunId!) as Promise<Payrun>,
+    enabled: !!payrunId,
+  });
 
-  // Local state for status (fallback to payrun.status)
-  const [status, setStatus] = useState<Status>(payrun?.status ?? 'Draft');
+  // Local state for status — initialised to 'Draft', synced once payrun loads
+  const [status, setStatus] = useState<Status>('Draft');
 
-  // Mutations for each action – these are placeholders that call the mock API
+  useEffect(() => {
+    if (payrun?.status) {
+      setStatus(payrun.status as Status);
+    }
+  }, [payrun?.status]);
+
+  // Mutations for each action
   const computeMutation = useMutation({
-    mutationFn: () => computePayrun(id!),
-    onSuccess: (data) => {
+    mutationFn: () => computePayrun(payrunId!),
+    onSuccess: () => {
       setStatus('Computed');
-      queryClient.invalidateQueries({ queryKey: ['payrun', id] });
+      queryClient.invalidateQueries({ queryKey: ['payrun', payrunId] });
     },
   });
 
   const validateMutation = useMutation({
-    mutationFn: () => validatePayrun(id!),
+    mutationFn: () => validatePayrun(payrunId!),
     onSuccess: () => {
       setStatus('Validated');
-      queryClient.invalidateQueries({ queryKey: ['payrun', id] });
+      queryClient.invalidateQueries({ queryKey: ['payrun', payrunId] });
     },
   });
 
   const markPaidMutation = useMutation({
-    mutationFn: () => markPayrunPaid(id!),
+    mutationFn: () => markPayrunPaid(payrunId!),
     onSuccess: () => {
       setStatus('Paid');
-      queryClient.invalidateQueries({ queryKey: ['payrun', id] });
+      queryClient.invalidateQueries({ queryKey: ['payrun', payrunId] });
     },
   });
 
   const sendMutation = useMutation({
-    mutationFn: () => sendPayrun(id!),
+    mutationFn: () => sendPayrun(payrunId!),
     onSuccess: () => {
-      // After sending, go back to list or show a success toast (placeholder)
       navigate('/payroll');
     },
   });
@@ -71,24 +76,33 @@ export const PayrunProcessing: React.FC = () => {
     return <Alert type="error" message="Unable to load payrun details." />;
   }
 
-  // Helper to render stepper UI
+  // Helper to render stepper UI — Badge only accepts 'sm' | 'md' for size
   const renderStepper = () => (
     <div className="flex items-center space-x-4 mb-6">
-      {STATUS_STEPS.map((step) => (
-        <div key={step} className="flex items-center">
-          <Badge
-            variant={status === step ? 'primary' : status === 'Draft' && step === 'Draft' ? 'neutral' : 'muted'}
-            size="lg"
-          >
-            {step}
-          </Badge>
-          {step !== STATUS_STEPS[STATUS_STEPS.length - 1] && <span className="mx-2">→</span>}
-        </div>
-      ))}
+      {STATUS_STEPS.map((step) => {
+        const stepIndex = STATUS_STEPS.indexOf(step);
+        const currentIndex = STATUS_STEPS.indexOf(status);
+        const variant =
+          step === status
+            ? 'primary'
+            : stepIndex < currentIndex
+            ? 'success'
+            : 'neutral';
+        return (
+          <div key={step} className="flex items-center">
+            <Badge variant={variant} size="md">
+              {step}
+            </Badge>
+            {step !== STATUS_STEPS[STATUS_STEPS.length - 1] && (
+              <span className="mx-2 text-neutral-400">→</span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 
-  // Warning panel placeholder – could show validation warnings etc.
+  // Warning panel placeholder
   const renderWarningPanel = () => (
     <Alert
       type="warning"
@@ -110,37 +124,37 @@ export const PayrunProcessing: React.FC = () => {
         <Button
           variant="primary"
           size="sm"
-          disabled={status !== 'Draft' || computeMutation.isLoading}
+          disabled={status !== 'Draft' || computeMutation.isPending}
           onClick={() => computeMutation.mutate()}
         >
-          {computeMutation.isLoading ? <Spinner size="sm" /> : 'Compute'}
+          {computeMutation.isPending ? <Spinner size="sm" /> : 'Compute'}
         </Button>
 
         <Button
           variant="primary"
           size="sm"
-          disabled={status !== 'Computed' || validateMutation.isLoading}
+          disabled={status !== 'Computed' || validateMutation.isPending}
           onClick={() => validateMutation.mutate()}
         >
-          {validateMutation.isLoading ? <Spinner size="sm" /> : 'Validate'}
+          {validateMutation.isPending ? <Spinner size="sm" /> : 'Validate'}
         </Button>
 
         <Button
           variant="primary"
           size="sm"
-          disabled={status !== 'Validated' || markPaidMutation.isLoading}
+          disabled={status !== 'Validated' || markPaidMutation.isPending}
           onClick={() => markPaidMutation.mutate()}
         >
-          {markPaidMutation.isLoading ? <Spinner size="sm" /> : 'Mark Paid'}
+          {markPaidMutation.isPending ? <Spinner size="sm" /> : 'Mark Paid'}
         </Button>
 
         <Button
           variant="secondary"
           size="sm"
-          disabled={status !== 'Paid' || sendMutation.isLoading}
+          disabled={status !== 'Paid' || sendMutation.isPending}
           onClick={() => sendMutation.mutate()}
         >
-          {sendMutation.isLoading ? <Spinner size="sm" /> : 'Send'}
+          {sendMutation.isPending ? <Spinner size="sm" /> : 'Send'}
         </Button>
       </div>
     </Card>

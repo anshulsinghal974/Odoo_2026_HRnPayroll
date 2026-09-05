@@ -1,8 +1,8 @@
 // Placeholder page factory — renders a coming-soon stub for unbuilt modules.
 // Replace each export with the real page component as modules are built.
 
-import { EmptyState } from '../../components';
-import { Button } from '../../components';
+import React from 'react';
+import { EmptyState, Button } from '../../components';
 
 interface PlaceholderProps {
   moduleName: string;

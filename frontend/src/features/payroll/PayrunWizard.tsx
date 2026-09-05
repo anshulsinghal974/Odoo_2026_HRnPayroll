@@ -1,9 +1,8 @@
 // Payrun Wizard UI – two-step creation flow
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button, Card, Badge, Spinner } from '../../components';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPayrun, getSalaryStructures } from '../../api/payruns';
 import { getEmployees } from '../../api/employees';
@@ -37,6 +36,15 @@ export const PayrunWizard: React.FC = () => {
 
   const nextStep = () => setStep((s) => Math.min(s + 1, 2));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const createPayrunMutation = useMutation({
+    mutationFn: (data: { salaryStructureId: string; periodStart: string; periodEnd: string; employeeIds: string[] }) => createPayrun(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['payrun', data.id] });
+      navigate(`/payroll/${data.id}`);
+    },
+  });
 
   // ---------- Step 1 UI ----------
   const renderStep1 = () => (
@@ -132,19 +140,20 @@ export const PayrunWizard: React.FC = () => {
         <Button variant="outline" size="sm" onClick={prevStep}>
           Back
         </Button>
-        <Button variant="primary" size="sm" onClick={() => {
-          mutation.mutate({
-            salaryStructureId: selectedStructure,
-            periodStart,
-            periodEnd,
-            employeeIds: selectedEmployees,
-          }, {
-            onSuccess: (data) => {
-              navigate(`/payroll/${data.id}`);
-            },
-          });
-        }} disabled={selectedEmployees.length === 0}>
-          Finish (submit)
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => {
+            createPayrunMutation.mutate({
+              salaryStructureId: selectedStructure,
+              periodStart,
+              periodEnd,
+              employeeIds: selectedEmployees,
+            });
+          }}
+          disabled={selectedEmployees.length === 0 || createPayrunMutation.isPending}
+        >
+          {createPayrunMutation.isPending ? <Spinner size="sm" /> : 'Finish (submit)'}
         </Button>
       </div>
     </Card>

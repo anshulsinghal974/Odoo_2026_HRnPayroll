@@ -10,28 +10,61 @@ let salaryStructures: SalaryStructure[] = [
 
 let payruns: Payrun[] = [];
 
-/** Fetch available salary structures */
+/** Get salary structures */
 export const getSalaryStructures = async (): Promise<SalaryStructure[]> => {
-  await new Promise((r) => setTimeout(r, 150));
-  return [...salaryStructures];
-};
-
-/** Create a new payrun (mock) */
-export const createPayrun = async (payload: Omit<Payrun, 'id' | 'createdAt' | 'updatedAt'>): Promise<Payrun> => {
-  await new Promise((r) => setTimeout(r, 200));
-  const newPayrun: Payrun = {
-    id: `pr${Date.now()}`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    ...payload,
-    status: 'Draft',
-  };
-  payruns.push(newPayrun);
-  return newPayrun;
+  return new Promise((resolve) => setTimeout(() => resolve([...salaryStructures]), 150));
 };
 
 /** Get a payrun by ID */
 export const getPayrun = async (id: string): Promise<Payrun | undefined> => {
-  await new Promise((r) => setTimeout(r, 100));
-  return payruns.find((p) => p.id === id);
+  return new Promise((resolve) => setTimeout(() => resolve(payruns.find(p => p.id === id)), 150));
+};
+
+/** Create a new payrun */
+export const createPayrun = async (data: {
+  salaryStructureId: string;
+  periodStart: string;
+  periodEnd: string;
+  employeeIds: string[];
+}): Promise<Payrun> => {
+  const newPayrun: Payrun = {
+    id: `pr-${Date.now()}`,
+    salaryStructureId: data.salaryStructureId,
+    periodStart: data.periodStart,
+    periodEnd: data.periodEnd,
+    employeeIds: data.employeeIds,
+    status: 'Draft',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  } as Payrun;
+  payruns.push(newPayrun);
+  return new Promise((resolve) => setTimeout(() => resolve(newPayrun), 150));
+};
+
+/** Compute payrun */
+export const computePayrun = async (id: string): Promise<Payrun> => {
+  await new Promise(r => setTimeout(r, 150));
+  const p = payruns.find(p => p.id === id);
+  if (p) p.status = 'Computed';
+  return p as Payrun;
+};
+
+export const validatePayrun = async (id: string): Promise<Payrun> => {
+  await new Promise(r => setTimeout(r, 150));
+  const p = payruns.find(p => p.id === id);
+  if (p) p.status = 'Validated';
+  return p as Payrun;
+};
+
+export const markPayrunPaid = async (id: string): Promise<Payrun> => {
+  await new Promise(r => setTimeout(r, 150));
+  const p = payruns.find(p => p.id === id);
+  if (p) p.status = 'Paid';
+  return p as Payrun;
+};
+
+export const sendPayrun = async (id: string): Promise<void> => {
+  await new Promise(r => setTimeout(r, 150));
+  // placeholder for sending logic
+  return;
 };

@@ -155,20 +155,25 @@ export interface LeaveBalance {
 }
 
 // Payrun and Salary Structure types
-export type PayrunStatus = 'Draft' | 'Computed' | 'Validated' | 'Paid';
 
 export interface SalaryStructure extends BaseEntity {
   name: string;
   description?: string;
 }
 
+export type CreateSalaryStructureInput = Omit<SalaryStructure, 'id' | 'createdAt' | 'updatedAt'>;
+
 export interface Payrun extends BaseEntity {
   salaryStructureId: string;
-  periodStart: string; // ISO date
-  periodEnd: string;   // ISO date
+  periodStart: string;
+  periodEnd: string;
   employeeIds: string[];
   status: PayrunStatus;
+  totalAmount?: number;
+  notes?: string;
 }
+
+export type CreatePayrunInput = Omit<Payrun, 'id' | 'createdAt' | 'updatedAt'>;
 
 // Attendance types
 export type AttendanceStatus = 'On Time' | 'Late' | 'Absent' | 'Overtime' | 'Missing Check-out';
