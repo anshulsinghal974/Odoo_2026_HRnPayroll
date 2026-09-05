@@ -1,2 +1,8 @@
-// UI Primitives entry point
-export {};
+// UI Primitives entry points
+export * from './Button';
+export * from './Card';
+export * from './Badge';
+export * from './Table';
+export * from './Modal';
+export * from './Spinner';
+export * from './EmptyState';
