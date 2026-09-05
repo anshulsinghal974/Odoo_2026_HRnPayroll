@@ -1,8 +1,24 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from app.routers import warnings, anomalies, forecast, risk, nlp, predictions
 from app.schemas import HealthResponse
+import sys
+import os
 
-app = FastAPI(title="PeoplePay360 ML Service")
+# Add parent directory to path to import seed script
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import seed_synthetic_data
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load models at startup
+    df = seed_synthetic_data.generate_synthetic_data()
+    seed_synthetic_data.fit_models(df)
+    yield
+    # Clean up models on shutdown
+    seed_synthetic_data.MODELS.clear()
+
+app = FastAPI(title="PeoplePay360 ML Service", lifespan=lifespan)
 
 app.include_router(warnings.router)
 app.include_router(anomalies.router)
