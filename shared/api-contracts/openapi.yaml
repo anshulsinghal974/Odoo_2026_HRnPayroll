@@ -1,0 +1,2291 @@
+openapi: 3.0.3
+info:
+  title: PeoplePay360 — HR & Payroll API
+  description: |
+    Complete REST API for the PeoplePay360 HR & Payroll Platform.
+    Covers Auth, Employees, Contracts, Working Schedules, Time Off,
+    Attendance, Salary Structures & Rules, Payruns, Payslips, and Dashboard.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development
+
+# ──────────────────────────────────────────────
+# SECURITY
+# ──────────────────────────────────────────────
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  # ────────────────────────────────────────────
+  # REUSABLE SCHEMAS
+  # ────────────────────────────────────────────
+  schemas:
+    # --- Enums ---
+    Role:
+      type: string
+      enum: [EMPLOYEE, HR_MANAGER, HR_PAYROLL_USER, HR_PAYROLL_MANAGER, ADMIN]
+
+    EmployeeStatus:
+      type: string
+      enum: [ACTIVE, ON_LEAVE, TERMINATED]
+
+    ContractStatus:
+      type: string
+      enum: [DRAFT, ACTIVE, EXPIRED, CANCELLED]
+
+    DayOfWeek:
+      type: string
+      enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY]
+
+    TimeOffUnit:
+      type: string
+      enum: [DAYS, HOURS]
+
+    ApprovalMode:
+      type: string
+      enum: [NO_APPROVAL, HR_APPROVAL, MANAGER_APPROVAL, BOTH]
+
+    AllocationStatus:
+      type: string
+      enum: [DRAFT, APPROVED, REFUSED]
+
+    LeaveStatus:
+      type: string
+      enum: [DRAFT, SUBMITTED, APPROVED, REFUSED, CANCELLED]
+
+    AttendanceStatus:
+      type: string
+      enum: [PRESENT, ABSENT, PARTIAL]
+
+    RuleCategory:
+      type: string
+      enum: [BASIC, ALLOWANCE, GROSS, DEDUCTION, NET]
+
+    ComputationType:
+      type: string
+      enum: [FIXED, PERCENTAGE, FORMULA]
+
+    PayrunStatus:
+      type: string
+      enum: [DRAFT, COMPUTED, VALIDATED, PAID]
+
+    PayslipStatus:
+      type: string
+      enum: [DRAFT, COMPUTED, VALIDATED, PAID]
+
+    # --- Auth ---
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserResponse'
+
+    RegisterRequest:
+      type: object
+      required: [email, password, role]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        employeeId:
+          type: string
+          format: uuid
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        employeeId:
+          type: string
+          nullable: true
+
+    # --- Employee ---
+    EmployeeCreate:
+      type: object
+      required: [firstName, lastName, email]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        department:
+          type: string
+        jobPosition:
+          type: string
+        managerId:
+          type: string
+          format: uuid
+        scheduleId:
+          type: string
+          format: uuid
+        bankName:
+          type: string
+        bankAccount:
+          type: string
+        bankIFSC:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+        address:
+          type: string
+        emergencyContact:
+          type: string
+
+    EmployeeUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        department:
+          type: string
+        jobPosition:
+          type: string
+        status:
+          $ref: '#/components/schemas/EmployeeStatus'
+        managerId:
+          type: string
+          format: uuid
+        scheduleId:
+          type: string
+          format: uuid
+        bankName:
+          type: string
+        bankAccount:
+          type: string
+        bankIFSC:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+        address:
+          type: string
+        emergencyContact:
+          type: string
+
+    EmployeeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        department:
+          type: string
+        jobPosition:
+          type: string
+        status:
+          $ref: '#/components/schemas/EmployeeStatus'
+        managerId:
+          type: string
+          nullable: true
+        scheduleId:
+          type: string
+          nullable: true
+        bankName:
+          type: string
+        bankAccount:
+          type: string
+        bankIFSC:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # --- Contract ---
+    ContractCreate:
+      type: object
+      required: [employeeId, name, startDate, wage]
+      properties:
+        employeeId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        wage:
+          type: number
+        department:
+          type: string
+        jobPosition:
+          type: string
+        salaryStructureId:
+          type: string
+          format: uuid
+        scheduleId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+
+    ContractUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        wage:
+          type: number
+        department:
+          type: string
+        jobPosition:
+          type: string
+        status:
+          $ref: '#/components/schemas/ContractStatus'
+        salaryStructureId:
+          type: string
+          format: uuid
+        scheduleId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+
+    ContractResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+          nullable: true
+        wage:
+          type: number
+        department:
+          type: string
+        jobPosition:
+          type: string
+        status:
+          $ref: '#/components/schemas/ContractStatus'
+        salaryStructureId:
+          type: string
+          nullable: true
+        scheduleId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # --- Working Schedule ---
+    ScheduleLineInput:
+      type: object
+      required: [day, startTime, endTime]
+      properties:
+        day:
+          $ref: '#/components/schemas/DayOfWeek'
+        startTime:
+          type: string
+          example: "09:00"
+        endTime:
+          type: string
+          example: "17:00"
+        breakMins:
+          type: integer
+          default: 0
+
+    WorkingScheduleCreate:
+      type: object
+      required: [name, lines]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          default: standard
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleLineInput'
+
+    WorkingScheduleUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        isActive:
+          type: boolean
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleLineInput'
+
+    WorkingScheduleResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+        totalHours:
+          type: number
+        isActive:
+          type: boolean
+        lines:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              day:
+                $ref: '#/components/schemas/DayOfWeek'
+              startTime:
+                type: string
+              endTime:
+                type: string
+              breakMins:
+                type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # --- Time Off Type ---
+    TimeOffTypeCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        unit:
+          $ref: '#/components/schemas/TimeOffUnit'
+        requiresAllocation:
+          type: boolean
+        approvalMode:
+          $ref: '#/components/schemas/ApprovalMode'
+        carryOver:
+          type: boolean
+        color:
+          type: string
+
+    TimeOffTypeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        unit:
+          $ref: '#/components/schemas/TimeOffUnit'
+        requiresAllocation:
+          type: boolean
+        approvalMode:
+          $ref: '#/components/schemas/ApprovalMode'
+        carryOver:
+          type: boolean
+        color:
+          type: string
+
+    # --- Allocation ---
+    AllocationCreate:
+      type: object
+      required: [employeeId, typeId, numberOfDays, dateFrom, dateTo]
+      properties:
+        employeeId:
+          type: string
+          format: uuid
+        typeId:
+          type: string
+          format: uuid
+        numberOfDays:
+          type: number
+        dateFrom:
+          type: string
+          format: date
+        dateTo:
+          type: string
+          format: date
+        notes:
+          type: string
+
+    AllocationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+        typeId:
+          type: string
+        numberOfDays:
+          type: number
+        dateFrom:
+          type: string
+          format: date
+        dateTo:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/AllocationStatus'
+        taken:
+          type: number
+        remaining:
+          type: number
+        notes:
+          type: string
+
+    # --- Leave Request ---
+    LeaveRequestCreate:
+      type: object
+      required: [employeeId, typeId, dateFrom, dateTo, duration]
+      properties:
+        employeeId:
+          type: string
+          format: uuid
+        typeId:
+          type: string
+          format: uuid
+        allocationId:
+          type: string
+          format: uuid
+        dateFrom:
+          type: string
+          format: date
+        dateTo:
+          type: string
+          format: date
+        duration:
+          type: number
+        reason:
+          type: string
+
+    LeaveRequestResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+        typeId:
+          type: string
+        allocationId:
+          type: string
+          nullable: true
+        dateFrom:
+          type: string
+          format: date
+        dateTo:
+          type: string
+          format: date
+        duration:
+          type: number
+        status:
+          $ref: '#/components/schemas/LeaveStatus'
+        reason:
+          type: string
+        approverId:
+          type: string
+          nullable: true
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    # --- Attendance ---
+    AttendanceCreate:
+      type: object
+      required: [employeeId, checkIn]
+      properties:
+        employeeId:
+          type: string
+          format: uuid
+        checkIn:
+          type: string
+          format: date-time
+        checkOut:
+          type: string
+          format: date-time
+
+    AttendanceUpdate:
+      type: object
+      properties:
+        checkIn:
+          type: string
+          format: date-time
+        checkOut:
+          type: string
+          format: date-time
+        correctionNote:
+          type: string
+
+    AttendanceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+        checkIn:
+          type: string
+          format: date-time
+        checkOut:
+          type: string
+          format: date-time
+          nullable: true
+        workedHours:
+          type: number
+          nullable: true
+        status:
+          $ref: '#/components/schemas/AttendanceStatus'
+        isCorrected:
+          type: boolean
+        originalCheckIn:
+          type: string
+          format: date-time
+          nullable: true
+        originalCheckOut:
+          type: string
+          format: date-time
+          nullable: true
+        correctedBy:
+          type: string
+          nullable: true
+        correctionNote:
+          type: string
+          nullable: true
+
+    # --- Salary Structure ---
+    SalaryStructureCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        isActive:
+          type: boolean
+
+    SalaryStructureResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        isActive:
+          type: boolean
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalaryRuleResponse'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # --- Salary Rule ---
+    SalaryRuleCreate:
+      type: object
+      required: [structureId, name, code, category, sequence]
+      properties:
+        structureId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        code:
+          type: string
+        category:
+          $ref: '#/components/schemas/RuleCategory'
+        sequence:
+          type: integer
+        computation:
+          $ref: '#/components/schemas/ComputationType'
+        amount:
+          type: number
+        percentage:
+          type: number
+        percentageBaseCode:
+          type: string
+        formula:
+          type: string
+
+    SalaryRuleResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        structureId:
+          type: string
+        name:
+          type: string
+        code:
+          type: string
+        category:
+          $ref: '#/components/schemas/RuleCategory'
+        sequence:
+          type: integer
+        computation:
+          $ref: '#/components/schemas/ComputationType'
+        amount:
+          type: number
+          nullable: true
+        percentage:
+          type: number
+          nullable: true
+        percentageBaseCode:
+          type: string
+          nullable: true
+        formula:
+          type: string
+          nullable: true
+
+    # --- Payrun ---
+    PayrunCreateStep1:
+      type: object
+      required: [structureId, periodStart, periodEnd]
+      properties:
+        structureId:
+          type: string
+          format: uuid
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+
+    PayrunCreateStep2:
+      type: object
+      required: [name, structureId, periodStart, periodEnd, employeeIds]
+      properties:
+        name:
+          type: string
+        structureId:
+          type: string
+          format: uuid
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        employeeIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        notes:
+          type: string
+
+    PayrunResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        structureId:
+          type: string
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/PayrunStatus'
+        createdBy:
+          type: string
+        payslips:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayslipResponse'
+        createdAt:
+          type: string
+          format: date-time
+
+    # --- Payslip ---
+    PayslipResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        payrunId:
+          type: string
+        employeeId:
+          type: string
+        contractId:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/PayslipStatus'
+        workedDays:
+          type: number
+          nullable: true
+        netAmount:
+          type: number
+          nullable: true
+        pdfUrl:
+          type: string
+          nullable: true
+        emailSentAt:
+          type: string
+          format: date-time
+          nullable: true
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayslipLineResponse'
+
+    PayslipLineResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ruleId:
+          type: string
+        ruleName:
+          type: string
+        category:
+          $ref: '#/components/schemas/RuleCategory'
+        sequence:
+          type: integer
+        amount:
+          type: number
+
+    # --- Dashboard ---
+    DashboardKPIs:
+      type: object
+      properties:
+        totalNetSalary:
+          type: number
+        payslipsGenerated:
+          type: integer
+        averageSalary:
+          type: number
+        approvedTimeOff:
+          type: integer
+        attendanceHealthPercent:
+          type: number
+
+    DashboardSalaryCostByDept:
+      type: array
+      items:
+        type: object
+        properties:
+          department:
+            type: string
+          totalCost:
+            type: number
+
+    DashboardMonthlyTrend:
+      type: array
+      items:
+        type: object
+        properties:
+          month:
+            type: string
+          totalNet:
+            type: number
+
+    # --- Eligible Employees (Payrun Wizard Step 1 response) ---
+    EligibleEmployeesResponse:
+      type: object
+      properties:
+        employees:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              firstName:
+                type: string
+              lastName:
+                type: string
+              department:
+                type: string
+              contractId:
+                type: string
+              wage:
+                type: number
+
+    # --- Generic ---
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        statusCode:
+          type: integer
+
+    PaginatedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: {}
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 20
+    SearchParam:
+      name: search
+      in: query
+      schema:
+        type: string
+    DepartmentFilter:
+      name: department
+      in: query
+      schema:
+        type: string
+    StatusFilter:
+      name: status
+      in: query
+      schema:
+        type: string
+
+# ──────────────────────────────────────────────
+# PATHS
+# ──────────────────────────────────────────────
+
+paths:
+  # ── AUTH ──
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and receive JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current authenticated user
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+  # ── EMPLOYEES ──
+  /employees:
+    get:
+      tags: [Employees]
+      summary: List all employees (paginated, filterable)
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - $ref: '#/components/parameters/DepartmentFilter'
+        - $ref: '#/components/parameters/StatusFilter'
+      responses:
+        '200':
+          description: Paginated list of employees
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/EmployeeResponse'
+    post:
+      tags: [Employees]
+      summary: Create a new employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeCreate'
+      responses:
+        '201':
+          description: Employee created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+
+  /employees/{id}:
+    get:
+      tags: [Employees]
+      summary: Get employee by ID (with smart-button counts)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Employee details with related counts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EmployeeResponse'
+                  - type: object
+                    properties:
+                      _counts:
+                        type: object
+                        properties:
+                          contracts:
+                            type: integer
+                          attendances:
+                            type: integer
+                          leaveRequests:
+                            type: integer
+                          payslips:
+                            type: integer
+    put:
+      tags: [Employees]
+      summary: Update an employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeUpdate'
+      responses:
+        '200':
+          description: Employee updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+    delete:
+      tags: [Employees]
+      summary: Delete an employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Employee deleted
+
+  # ── CONTRACTS ──
+  /contracts:
+    get:
+      tags: [Contracts]
+      summary: List all contracts (filterable by employee, status)
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: employeeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/StatusFilter'
+      responses:
+        '200':
+          description: Paginated list of contracts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ContractResponse'
+    post:
+      tags: [Contracts]
+      summary: Create a new contract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractCreate'
+      responses:
+        '201':
+          description: Contract created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractResponse'
+        '409':
+          description: Active contract already exists for this employee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /contracts/{id}:
+    get:
+      tags: [Contracts]
+      summary: Get contract by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Contract details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractResponse'
+    put:
+      tags: [Contracts]
+      summary: Update a contract
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractUpdate'
+      responses:
+        '200':
+          description: Contract updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractResponse'
+        '409':
+          description: Cannot activate — active contract exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Contracts]
+      summary: Delete a contract (only DRAFT)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Contract deleted
+
+  # ── WORKING SCHEDULES ──
+  /schedules:
+    get:
+      tags: [Working Schedules]
+      summary: List all working schedules
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of working schedules
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/WorkingScheduleResponse'
+    post:
+      tags: [Working Schedules]
+      summary: Create a working schedule with lines
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkingScheduleCreate'
+      responses:
+        '201':
+          description: Schedule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkingScheduleResponse'
+
+  /schedules/{id}:
+    get:
+      tags: [Working Schedules]
+      summary: Get schedule by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Schedule details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkingScheduleResponse'
+    put:
+      tags: [Working Schedules]
+      summary: Update a schedule (replaces lines)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkingScheduleUpdate'
+      responses:
+        '200':
+          description: Schedule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkingScheduleResponse'
+    delete:
+      tags: [Working Schedules]
+      summary: Delete a schedule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Schedule deleted
+
+  # ── TIME OFF TYPES ──
+  /time-off-types:
+    get:
+      tags: [Time Off]
+      summary: List all time off types
+      responses:
+        '200':
+          description: List of time off types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeOffTypeResponse'
+    post:
+      tags: [Time Off]
+      summary: Create a time off type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeOffTypeCreate'
+      responses:
+        '201':
+          description: Type created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeOffTypeResponse'
+
+  /time-off-types/{id}:
+    put:
+      tags: [Time Off]
+      summary: Update a time off type
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeOffTypeCreate'
+      responses:
+        '200':
+          description: Type updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeOffTypeResponse'
+    delete:
+      tags: [Time Off]
+      summary: Delete a time off type
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Type deleted
+
+  # ── ALLOCATIONS ──
+  /allocations:
+    get:
+      tags: [Time Off]
+      summary: List allocations (filterable by employee, type, status)
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: employeeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: typeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/StatusFilter'
+      responses:
+        '200':
+          description: Paginated list of allocations
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AllocationResponse'
+    post:
+      tags: [Time Off]
+      summary: Create an allocation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AllocationCreate'
+      responses:
+        '201':
+          description: Allocation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllocationResponse'
+
+  /allocations/{id}:
+    get:
+      tags: [Time Off]
+      summary: Get allocation by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Allocation details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllocationResponse'
+
+  /allocations/{id}/approve:
+    post:
+      tags: [Time Off]
+      summary: Approve an allocation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Allocation approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllocationResponse'
+
+  /allocations/{id}/refuse:
+    post:
+      tags: [Time Off]
+      summary: Refuse an allocation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Allocation refused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllocationResponse'
+
+  # ── LEAVE REQUESTS ──
+  /leave-requests:
+    get:
+      tags: [Time Off]
+      summary: List leave requests (filterable)
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: employeeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/StatusFilter'
+      responses:
+        '200':
+          description: Paginated list of leave requests
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/LeaveRequestResponse'
+    post:
+      tags: [Time Off]
+      summary: Create a leave request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestCreate'
+      responses:
+        '201':
+          description: Leave request created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestResponse'
+
+  /leave-requests/{id}:
+    get:
+      tags: [Time Off]
+      summary: Get leave request by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Leave request details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestResponse'
+
+  /leave-requests/{id}/approve:
+    post:
+      tags: [Time Off]
+      summary: Approve a leave request (auto-deducts from allocation)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Leave approved, balance deducted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestResponse'
+
+  /leave-requests/{id}/refuse:
+    post:
+      tags: [Time Off]
+      summary: Refuse a leave request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Leave refused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestResponse'
+
+  # ── ATTENDANCE ──
+  /attendances:
+    get:
+      tags: [Attendance]
+      summary: List attendance records (filterable)
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: employeeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Paginated attendance list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AttendanceResponse'
+    post:
+      tags: [Attendance]
+      summary: Create an attendance record (check in)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceCreate'
+      responses:
+        '201':
+          description: Attendance recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceResponse'
+
+  /attendances/{id}:
+    get:
+      tags: [Attendance]
+      summary: Get attendance by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Attendance details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceResponse'
+    put:
+      tags: [Attendance]
+      summary: Update attendance (correction with audit trail)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceUpdate'
+      responses:
+        '200':
+          description: Attendance updated (correction logged)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceResponse'
+
+  /attendances/{id}/checkout:
+    post:
+      tags: [Attendance]
+      summary: Check out (sets checkOut + calculates workedHours)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                checkOut:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Checked out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceResponse'
+
+  # ── SALARY STRUCTURES ──
+  /salary-structures:
+    get:
+      tags: [Payroll]
+      summary: List all salary structures
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of salary structures
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SalaryStructureResponse'
+    post:
+      tags: [Payroll]
+      summary: Create a salary structure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaryStructureCreate'
+      responses:
+        '201':
+          description: Structure created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryStructureResponse'
+
+  /salary-structures/{id}:
+    get:
+      tags: [Payroll]
+      summary: Get salary structure with rules
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Structure with rules
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryStructureResponse'
+    put:
+      tags: [Payroll]
+      summary: Update a salary structure
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaryStructureCreate'
+      responses:
+        '200':
+          description: Structure updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryStructureResponse'
+    delete:
+      tags: [Payroll]
+      summary: Delete a salary structure
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Structure deleted
+
+  # ── SALARY RULES ──
+  /salary-rules:
+    get:
+      tags: [Payroll]
+      summary: List salary rules (filterable by structureId)
+      parameters:
+        - name: structureId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of salary rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SalaryRuleResponse'
+    post:
+      tags: [Payroll]
+      summary: Create a salary rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaryRuleCreate'
+      responses:
+        '201':
+          description: Rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryRuleResponse'
+
+  /salary-rules/{id}:
+    get:
+      tags: [Payroll]
+      summary: Get salary rule by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Rule details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryRuleResponse'
+    put:
+      tags: [Payroll]
+      summary: Update a salary rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaryRuleCreate'
+      responses:
+        '200':
+          description: Rule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryRuleResponse'
+    delete:
+      tags: [Payroll]
+      summary: Delete a salary rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Rule deleted
+
+  # ── PAYRUNS ──
+  /payruns:
+    get:
+      tags: [Payruns]
+      summary: List all payruns
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/StatusFilter'
+      responses:
+        '200':
+          description: Paginated list of payruns
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PayrunResponse'
+
+  /payruns/eligible-employees:
+    post:
+      tags: [Payruns]
+      summary: "Wizard Step 1: Get eligible employees for a structure + period"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayrunCreateStep1'
+      responses:
+        '200':
+          description: List of eligible employees
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EligibleEmployeesResponse'
+
+  /payruns/create:
+    post:
+      tags: [Payruns]
+      summary: "Wizard Step 2: Create payrun with selected employees"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayrunCreateStep2'
+      responses:
+        '201':
+          description: Payrun created with draft payslips
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayrunResponse'
+
+  /payruns/{id}:
+    get:
+      tags: [Payruns]
+      summary: Get payrun by ID with payslips
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payrun details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayrunResponse'
+
+  /payruns/{id}/compute:
+    post:
+      tags: [Payruns]
+      summary: Compute all payslips in the payrun (Draft → Computed)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payrun computed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayrunResponse'
+
+  /payruns/{id}/validate:
+    post:
+      tags: [Payruns]
+      summary: Validate the payrun (Computed → Validated)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payrun validated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayrunResponse'
+
+  /payruns/{id}/mark-paid:
+    post:
+      tags: [Payruns]
+      summary: Mark payrun as paid (Validated → Paid, immutable after)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payrun marked as paid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayrunResponse'
+
+  /payruns/{id}/send-payslips:
+    post:
+      tags: [Payruns]
+      summary: Bulk email all payslips in the payrun
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Email delivery report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sent:
+                    type: integer
+                  failed:
+                    type: integer
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+
+  /payruns/{id}/warnings:
+    get:
+      tags: [Payruns]
+      summary: Get payroll warnings for this payrun
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of warnings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  readinessScore:
+                    type: number
+                  warnings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        severity:
+                          type: string
+                          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+                        message:
+                          type: string
+                        employeeId:
+                          type: string
+
+  # ── PAYSLIPS ──
+  /payslips/{id}:
+    get:
+      tags: [Payslips]
+      summary: Get payslip by ID with computation lines
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payslip details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayslipResponse'
+
+  /payslips/{id}/pdf:
+    get:
+      tags: [Payslips]
+      summary: Download payslip as PDF
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  # ── DASHBOARD ──
+  /dashboard/kpis:
+    get:
+      tags: [Dashboard]
+      summary: Get live KPI cards
+      parameters:
+        - name: periodStart
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: periodEnd
+          in: query
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/DepartmentFilter'
+      responses:
+        '200':
+          description: Dashboard KPIs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardKPIs'
+
+  /dashboard/salary-by-department:
+    get:
+      tags: [Dashboard]
+      summary: Salary cost by department (bar chart data)
+      parameters:
+        - name: periodStart
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: periodEnd
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Department salary breakdown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSalaryCostByDept'
+
+  /dashboard/monthly-trend:
+    get:
+      tags: [Dashboard]
+      summary: Monthly net salary trend (line chart data)
+      parameters:
+        - name: months
+          in: query
+          schema:
+            type: integer
+            default: 6
+      responses:
+        '200':
+          description: Monthly trend data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardMonthlyTrend'
+
+  /dashboard/attendance-overview:
+    get:
+      tags: [Dashboard]
+      summary: Attendance health overview
+      parameters:
+        - name: periodStart
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: periodEnd
+          in: query
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/DepartmentFilter'
+      responses:
+        '200':
+          description: Attendance overview
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalRecords:
+                    type: integer
+                  presentCount:
+                    type: integer
+                  absentCount:
+                    type: integer
+                  partialCount:
+                    type: integer
+                  healthPercent:
+                    type: number
+
+  /dashboard/alerts:
+    get:
+      tags: [Dashboard]
+      summary: Active dashboard alerts
+      responses:
+        '200':
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    severity:
+                      type: string
+                    message:
+                      type: string
+                    relatedId:
+                      type: string
