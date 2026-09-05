@@ -1,15 +1,13 @@
 // App Router — PeoplePay360
 // All authenticated routes are wrapped by ProtectedRoute + AppLayout.
-// /login is the only public route.
-// /playground is preserved as an unauthenticated dev route.
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AppLayout } from './AppLayout';
 import { LoginPage } from '../features/auth';
 import { EmployeeList } from '../features/employees';
+import { ContractsPage } from '../features/contracts';
 import {
-  ContractsPlaceholder,
   AttendancePlaceholder,
   TimeOffPlaceholder,
   PayrollPlaceholder,
@@ -35,7 +33,7 @@ export function App() {
         >
           <Route index element={<Navigate to="/employees" replace />} />
           <Route path="/employees" element={<EmployeeList />} />
-          <Route path="/contracts" element={<ContractsPlaceholder />} />
+          <Route path="/contracts" element={<ContractsPage />} />
           <Route path="/attendance" element={<AttendancePlaceholder />} />
           <Route path="/time-off" element={<TimeOffPlaceholder />} />
           <Route path="/payroll" element={<PayrollPlaceholder />} />

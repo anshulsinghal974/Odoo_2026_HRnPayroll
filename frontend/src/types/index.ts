@@ -65,3 +65,38 @@ export interface Employee extends BaseEntity {
 
 export type CreateEmployeeInput = Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>;
 export type UpdateEmployeeInput = Partial<CreateEmployeeInput>;
+
+// Contract types
+export interface Contract extends BaseEntity {
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  jobPosition: string;
+  startDate: string;
+  endDate?: string;
+  wage: number; // Monthly gross base salary
+  salaryStructure: string;
+  workingSchedule: string;
+  status: ContractStatus;
+}
+
+export type CreateContractInput = Omit<Contract, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateContractInput = Partial<CreateContractInput>;
+
+// Working Schedule types
+export interface ScheduleDay {
+  day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+  isWorkDay: boolean;
+  startTime: string; // e.g. "09:00"
+  endTime: string;   // e.g. "17:00"
+  breakHours: number; // e.g. 1.0
+  dailyHours: number; // e.g. 7.0 (calculated)
+}
+
+export interface WorkingSchedule extends BaseEntity {
+  name: string;
+  days: ScheduleDay[];
+  totalWeeklyHours: number;
+}
+
+export type CreateScheduleInput = Omit<WorkingSchedule, 'id' | 'createdAt' | 'updatedAt'>;
