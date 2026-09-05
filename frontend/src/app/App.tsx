@@ -7,8 +7,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AppLayout } from './AppLayout';
 import { LoginPage } from '../features/auth';
+import { EmployeeList } from '../features/employees';
 import {
-  EmployeesPlaceholder,
   ContractsPlaceholder,
   AttendancePlaceholder,
   TimeOffPlaceholder,
@@ -34,7 +34,7 @@ export function App() {
           }
         >
           <Route index element={<Navigate to="/employees" replace />} />
-          <Route path="/employees" element={<EmployeesPlaceholder />} />
+          <Route path="/employees" element={<EmployeeList />} />
           <Route path="/contracts" element={<ContractsPlaceholder />} />
           <Route path="/attendance" element={<AttendancePlaceholder />} />
           <Route path="/time-off" element={<TimeOffPlaceholder />} />

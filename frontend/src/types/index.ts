@@ -41,3 +41,27 @@ export interface AuthTokenPayload {
   iat: number;
   exp: number;
 }
+
+// Employee types
+export interface Employee extends BaseEntity {
+  name: string;
+  department: string;
+  manager?: string;
+  managerId?: string;
+  jobPosition: string;
+  workingSchedule: string;
+  status: EmployeeStatus;
+  workEmail: string;
+  phone?: string;
+  bankName?: string;
+  accountNumber?: string;
+  avatarUrl?: string;
+  // Smart counters
+  contractsCount?: number;
+  attendanceCount?: number;
+  timeOffCount?: number;
+  allocationsCount?: number;
+}
+
+export type CreateEmployeeInput = Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateEmployeeInput = Partial<CreateEmployeeInput>;
