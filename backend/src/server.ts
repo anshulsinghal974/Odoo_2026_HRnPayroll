@@ -7,6 +7,7 @@ import employeeRoutes from './modules/employees/employee.routes';
 import contractRoutes from './modules/contracts/contract.routes';
 import scheduleRoutes from './modules/schedules/schedule.routes';
 import timeoffRoutes from './modules/timeoff/timeoff.routes';
+import attendanceRoutes from './modules/attendance/attendance.routes';
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/contracts', contractRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api', timeoffRoutes);
+app.use('/api/attendances', attendanceRoutes);
 
 // ──────────────────────────────────────────────
 // Global error handler
