@@ -4,6 +4,9 @@ from typing import Optional, List, Dict, Any
 class HealthResponse(BaseModel):
     status: str
     message: str
+    models_loaded: bool
 
 class ErrorResponse(BaseModel):
-    detail: str
+    error: str
+    message: str
+

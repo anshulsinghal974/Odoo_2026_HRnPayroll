@@ -18,7 +18,14 @@ async def lifespan(app: FastAPI):
     # Clean up models on shutdown
     seed_synthetic_data.MODELS.clear()
 
+from fastapi.exceptions import RequestValidationError
+from app.exceptions import validation_exception_handler, generic_exception_handler
+
 app = FastAPI(title="PeoplePay360 ML Service", lifespan=lifespan)
+
+# Register exception handlers
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
 
 app.include_router(warnings.router)
 app.include_router(anomalies.router)
@@ -29,4 +36,9 @@ app.include_router(predictions.router)
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 async def health_check():
-    return HealthResponse(status="ok", message="ML Service is running")
+    models_loaded = 'salary_forecast_model' in seed_synthetic_data.MODELS
+    return HealthResponse(
+        status="ok", 
+        message="ML Service is running",
+        models_loaded=models_loaded
+    )
