@@ -154,6 +154,22 @@ export interface LeaveBalance {
   remaining: number;
 }
 
+// Payrun and Salary Structure types
+export type PayrunStatus = 'Draft' | 'Computed' | 'Validated' | 'Paid';
+
+export interface SalaryStructure extends BaseEntity {
+  name: string;
+  description?: string;
+}
+
+export interface Payrun extends BaseEntity {
+  salaryStructureId: string;
+  periodStart: string; // ISO date
+  periodEnd: string;   // ISO date
+  employeeIds: string[];
+  status: PayrunStatus;
+}
+
 // Attendance types
 export type AttendanceStatus = 'On Time' | 'Late' | 'Absent' | 'Overtime' | 'Missing Check-out';
 
