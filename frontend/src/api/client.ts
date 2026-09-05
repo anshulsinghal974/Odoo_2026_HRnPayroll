@@ -1,33 +1,40 @@
-// PeoplePay360 API Client Skeleton
+// PeoplePay360 — Axios API Client
+// Attaches JWT token from AuthContext / localStorage on every request.
+
+import axios from 'axios';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  success: boolean;
-}
-
-export async function apiClient<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const token = localStorage.getItem('pp360_token');
-  const headers: HeadersInit = {
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
+  },
+});
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+// Request interceptor — attach Bearer token if present
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('pp360_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `API Error: ${response.statusText}`);
+// Response interceptor — handle 401 globally
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear stale token and redirect to login
+      localStorage.removeItem('pp360_token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
   }
+);
 
-  return response.json();
-}
+export default apiClient;
