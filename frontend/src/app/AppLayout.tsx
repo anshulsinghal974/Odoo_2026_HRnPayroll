@@ -7,7 +7,7 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col">
       <TopNav />
-      <main className="flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-screen-2xl w-full mx-auto px-40 sm:px-6 lg:px-8 py-6">
         <Outlet />
       </main>
     </div>
