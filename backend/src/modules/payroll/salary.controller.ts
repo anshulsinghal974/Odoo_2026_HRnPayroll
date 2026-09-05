@@ -108,3 +108,52 @@ export async function deleteRuleHandler(req: Request, res: Response): Promise<vo
     res.status(error.statusCode || 500).json({ error: error.message || 'Failed to delete salary rule' });
   }
 }
+
+// ──────────────────────────────────────────────
+// COMPUTATION ENGINE
+// ──────────────────────────────────────────────
+
+export async function computeSalaryHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { employeeId, periodStart, periodEnd, structureId, wage } = req.body;
+
+    // Full contract + structure period computation
+    if (employeeId && periodStart && periodEnd) {
+      const { computeSalaryForEmployee } = await import('./salary-engine');
+      const result = await computeSalaryForEmployee(
+        employeeId,
+        new Date(periodStart),
+        new Date(periodEnd)
+      );
+      res.status(200).json(result);
+      return;
+    }
+
+    // Structure + wage direct simulation
+    if (structureId && wage !== undefined) {
+      const structure = await salaryService.getSalaryStructureById(structureId);
+      const { computeSalaryFromRules } = await import('./salary-engine');
+      const rules = structure.rules.map((r) => ({
+        id: r.id,
+        name: r.name,
+        code: r.code,
+        category: r.category,
+        sequence: r.sequence,
+        computation: r.computation,
+        amount: r.amount ? Number(r.amount) : null,
+        percentage: r.percentage ? Number(r.percentage) : null,
+        percentageBaseCode: r.percentageBaseCode,
+        formula: r.formula,
+      }));
+      const result = computeSalaryFromRules(rules, Number(wage));
+      res.status(200).json(result);
+      return;
+    }
+
+    res.status(400).json({
+      error: 'Either provide (employeeId, periodStart, periodEnd) or (structureId, wage) for simulation',
+    });
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to compute salary' });
+  }
+}

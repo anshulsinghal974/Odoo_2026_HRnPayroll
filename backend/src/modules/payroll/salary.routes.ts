@@ -13,6 +13,7 @@ import {
   createRuleHandler,
   updateRuleHandler,
   deleteRuleHandler,
+  computeSalaryHandler,
 } from './salary.controller';
 
 const router = Router();
@@ -86,6 +87,16 @@ router.delete(
   '/salary-rules/:id',
   requireRoles(Role.HR_PAYROLL_MANAGER, Role.ADMIN),
   deleteRuleHandler
+);
+
+// ──────────────────────────────────────────────
+// SALARY ENGINE COMPUTATION / SIMULATION
+// ──────────────────────────────────────────────
+
+router.post(
+  '/salary-engine/compute',
+  requireRoles(Role.HR_PAYROLL_USER, Role.HR_PAYROLL_MANAGER, Role.ADMIN),
+  computeSalaryHandler
 );
 
 export default router;
