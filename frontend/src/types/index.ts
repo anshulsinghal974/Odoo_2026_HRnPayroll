@@ -100,3 +100,56 @@ export interface WorkingSchedule extends BaseEntity {
 }
 
 export type CreateScheduleInput = Omit<WorkingSchedule, 'id' | 'createdAt' | 'updatedAt'>;
+
+// Time Off types
+export type TimeOffUnit = 'Days' | 'Hours';
+export type TimeOffApprovalWorkflow = 'No Validation' | 'By Time Off Officer' | 'By HR Manager';
+
+export interface TimeOffType extends BaseEntity {
+  name: string;
+  code: string;
+  unit: TimeOffUnit;
+  approvalWorkflow: TimeOffApprovalWorkflow;
+  requiresAllocation: boolean;
+  carryOverDays: number;
+}
+
+export type CreateTimeOffTypeInput = Omit<TimeOffType, 'id' | 'createdAt' | 'updatedAt'>;
+
+export interface TimeOffAllocation extends BaseEntity {
+  employeeId: string;
+  employeeName: string;
+  timeOffTypeId: string;
+  timeOffTypeName: string;
+  allocatedAmount: number;
+  status: LeaveRequestStatus;
+  validityStart: string;
+  validityEnd: string;
+  reason?: string;
+}
+
+export type CreateAllocationInput = Omit<TimeOffAllocation, 'id' | 'createdAt' | 'updatedAt'>;
+
+export interface TimeOffRequest extends BaseEntity {
+  employeeId: string;
+  employeeName: string;
+  timeOffTypeId: string;
+  timeOffTypeName: string;
+  startDate: string;
+  endDate: string;
+  duration: number;
+  unit: TimeOffUnit;
+  status: LeaveRequestStatus;
+  reason?: string;
+}
+
+export type CreateTimeOffRequestInput = Omit<TimeOffRequest, 'id' | 'createdAt' | 'updatedAt'>;
+
+export interface LeaveBalance {
+  timeOffTypeId: string;
+  timeOffTypeName: string;
+  unit: TimeOffUnit;
+  allocated: number;
+  used: number;
+  remaining: number;
+}

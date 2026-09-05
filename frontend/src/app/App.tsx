@@ -7,9 +7,9 @@ import { AppLayout } from './AppLayout';
 import { LoginPage } from '../features/auth';
 import { EmployeeList } from '../features/employees';
 import { ContractsPage } from '../features/contracts';
+import { TimeOffPage } from '../features/timeoff';
 import {
   AttendancePlaceholder,
-  TimeOffPlaceholder,
   PayrollPlaceholder,
   ReportsPlaceholder,
 } from '../features/placeholders/Placeholders';
@@ -35,7 +35,7 @@ export function App() {
           <Route path="/employees" element={<EmployeeList />} />
           <Route path="/contracts" element={<ContractsPage />} />
           <Route path="/attendance" element={<AttendancePlaceholder />} />
-          <Route path="/time-off" element={<TimeOffPlaceholder />} />
+          <Route path="/time-off" element={<TimeOffPage />} />
           <Route path="/payroll" element={<PayrollPlaceholder />} />
           <Route path="/reports" element={<ReportsPlaceholder />} />
         </Route>
