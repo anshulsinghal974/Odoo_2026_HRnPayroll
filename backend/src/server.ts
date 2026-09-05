@@ -1,15 +1,26 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './db/prisma';
+import authRoutes from './modules/auth/auth.routes';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
-const prisma = new PrismaClient();
 
+// ──────────────────────────────────────────────
+// Global middleware
+// ──────────────────────────────────────────────
+
+app.use(cors());
 app.use(express.json());
 
+// ──────────────────────────────────────────────
+// Routes
+// ──────────────────────────────────────────────
+
+// Health check (public)
 app.get('/health', async (req: Request, res: Response) => {
   try {
     // Basic health check including DB connection
@@ -20,6 +31,29 @@ app.get('/health', async (req: Request, res: Response) => {
     res.status(500).json({ status: 'error', message: 'Database connection failed' });
   }
 });
+
+// Module routes
+app.use('/api/auth', authRoutes);
+
+// ──────────────────────────────────────────────
+// Global error handler
+// ──────────────────────────────────────────────
+
+app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+  console.error('Unhandled error:', err);
+
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal server error';
+
+  res.status(statusCode).json({
+    error: message,
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
+  });
+});
+
+// ──────────────────────────────────────────────
+// Start server
+// ──────────────────────────────────────────────
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
