@@ -9,7 +9,11 @@
     "build": "tsc",
     "test": "ts-node src/modules/payroll/__tests__/salary-engine.test.ts",
     "seed": "ts-node src/db/seed.ts",
+    "db:reset": "prisma migrate reset --force --skip-seed && npm run seed",
     "postinstall": "prisma skills sync || exit 0"
+  },
+  "prisma": {
+    "seed": "ts-node src/db/seed.ts"
   },
   "keywords": [],
   "author": "",
