@@ -155,3 +155,37 @@ export async function deleteHandler(req: Request, res: Response): Promise<void> 
     res.status(error.statusCode || 500).json({ error: error.message || 'Failed to delete attendance record' });
   }
 }
+
+/**
+ * PUT /api/attendances/:id OR POST /api/attendances/:id/correct
+ * Manual correction endpoint with full audit trail (original values, corrector, timestamp, note)
+ */
+export async function correctionHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const authReq = req as AuthRequest;
+    const id = req.params.id as string;
+
+    const { checkIn, checkOut, correctionNote } = req.body;
+
+    if (!correctionNote || typeof correctionNote !== 'string' || correctionNote.trim() === '') {
+      res.status(400).json({ error: 'A valid correctionNote is required to explain this correction for audit purposes' });
+      return;
+    }
+
+    const correctorUserId = authReq.user?.userId || 'SYSTEM';
+
+    const corrected = await attendanceService.correctAttendance(
+      id,
+      {
+        checkIn,
+        checkOut,
+        correctionNote: correctionNote.trim(),
+      },
+      correctorUserId
+    );
+
+    res.status(200).json(corrected);
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to correct attendance record' });
+  }
+}

@@ -8,6 +8,7 @@ import {
   createHandler,
   checkOutHandler,
   deleteHandler,
+  correctionHandler,
 } from './attendance.controller';
 
 const router = Router();
@@ -22,6 +23,10 @@ router.get('/:id', getByIdHandler);
 // Create (check-in) & Check-out
 router.post('/', createHandler);
 router.post('/:id/checkout', checkOutHandler);
+
+// Manual Correction with Audit Trail (HR Managers, Payroll Managers/Users, Admins)
+router.put('/:id', requireRoles(Role.HR_MANAGER, Role.HR_PAYROLL_USER, Role.HR_PAYROLL_MANAGER, Role.ADMIN), correctionHandler);
+router.post('/:id/correct', requireRoles(Role.HR_MANAGER, Role.HR_PAYROLL_USER, Role.HR_PAYROLL_MANAGER, Role.ADMIN), correctionHandler);
 
 // Delete (HR Manager & Admin only)
 router.delete('/:id', requireRoles(Role.HR_MANAGER, Role.ADMIN), deleteHandler);

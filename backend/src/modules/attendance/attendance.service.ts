@@ -40,6 +40,12 @@ export interface CreateAttendanceInput {
   status?: AttendanceStatus;
 }
 
+export interface CorrectAttendanceInput {
+  checkIn?: string | Date;
+  checkOut?: string | Date | null;
+  correctionNote: string;
+}
+
 export interface ScheduleLineDetails {
   day: DayOfWeek;
   startTime: string;
@@ -498,4 +504,93 @@ export async function deleteAttendance(id: string): Promise<void> {
   await prisma.attendance.delete({
     where: { id },
   });
+}
+
+/**
+ * Manually correct an attendance record with full audit trail:
+ * preserves original values, logs corrector ID, notes, and updates timestamp.
+ */
+export async function correctAttendance(
+  id: string,
+  input: CorrectAttendanceInput,
+  correctorUserId: string
+): Promise<AttendanceWithDerivedStatus> {
+  const existing = await prisma.attendance.findUnique({
+    where: { id },
+  });
+
+  if (!existing) {
+    throw { statusCode: 404, message: 'Attendance record not found' };
+  }
+
+  if (!input.correctionNote || input.correctionNote.trim() === '') {
+    throw { statusCode: 400, message: 'correctionNote is required for audit trail when correcting attendance' };
+  }
+
+  const newCheckIn = input.checkIn ? new Date(input.checkIn) : existing.checkIn;
+  const newCheckOut =
+    input.checkOut !== undefined
+      ? input.checkOut
+        ? new Date(input.checkOut)
+        : null
+      : existing.checkOut;
+
+  if (newCheckOut && newCheckOut < newCheckIn) {
+    throw { statusCode: 400, message: 'Check-out time cannot be before check-in time' };
+  }
+
+  // Preserve initial original values if this is the first correction;
+  // otherwise retain already-archived original values
+  const originalCheckIn = existing.isCorrected ? existing.originalCheckIn : existing.checkIn;
+  const originalCheckOut = existing.isCorrected ? existing.originalCheckOut : existing.checkOut;
+
+  // Recompute worked hours & status
+  const scheduleLine = await resolveScheduleLineForEmployee(existing.employeeId, newCheckIn);
+  let workedHours: number | null = null;
+  let status = existing.status;
+
+  if (newCheckOut) {
+    workedHours = computeWorkedHours(newCheckIn, newCheckOut, scheduleLine?.breakMins || 0);
+    status = derivePrismaStatus(workedHours, scheduleLine);
+  }
+
+  const updated = await prisma.attendance.update({
+    where: { id },
+    data: {
+      checkIn: newCheckIn,
+      checkOut: newCheckOut,
+      workedHours: workedHours !== null ? new Prisma.Decimal(workedHours) : null,
+      status,
+      isCorrected: true,
+      originalCheckIn,
+      originalCheckOut,
+      correctedBy: correctorUserId,
+      correctionNote: input.correctionNote,
+    },
+    include: {
+      employee: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          department: true,
+          jobPosition: true,
+        },
+      },
+    },
+  });
+
+  const derivedStatus = deriveAttendanceStatus(
+    updated.checkIn,
+    updated.checkOut,
+    workedHours,
+    updated.status,
+    scheduleLine
+  );
+
+  return {
+    ...updated,
+    derivedStatus,
+  };
 }
