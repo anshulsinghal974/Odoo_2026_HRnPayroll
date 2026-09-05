@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { prisma } from './db/prisma';
 import authRoutes from './modules/auth/auth.routes';
+import employeeRoutes from './modules/employees/employee.routes';
+import contractRoutes from './modules/contracts/contract.routes';
 
 dotenv.config();
 
@@ -34,6 +36,8 @@ app.get('/health', async (req: Request, res: Response) => {
 
 // Module routes
 app.use('/api/auth', authRoutes);
+app.use('/api/employees', employeeRoutes);
+app.use('/api/contracts', contractRoutes);
 
 // ──────────────────────────────────────────────
 // Global error handler
