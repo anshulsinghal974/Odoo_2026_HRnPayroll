@@ -6,7 +6,6 @@ import { Button, Card, Badge, Spinner } from '../../components';
 import { useNavigate } from 'react-router-dom';
 import { createPayrun, getSalaryStructures } from '../../api/payruns';
 import { getEmployees } from '../../api/employees';
-import type { SalaryStructure, Employee, Payrun } from '../../types';
 
 export const PayrunWizard: React.FC = () => {
   const [step, setStep] = useState(1);

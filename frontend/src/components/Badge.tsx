@@ -12,55 +12,53 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  primary: 'bg-primary-50 text-primary-700 border-primary-200/70',
-  neutral: 'bg-neutral-100 text-neutral-700 border-neutral-200/80',
-  success: 'bg-success-50 text-success-700 border-success-200/70',
-  warning: 'bg-warning-50 text-warning-800 border-warning-200/80',
-  danger: 'bg-danger-50 text-danger-700 border-danger-200/70',
+  primary: 'bg-indigo-50  text-indigo-700  border-indigo-200/60',
+  neutral: 'bg-gray-100   text-gray-600    border-gray-200/70',
+  success: 'bg-emerald-50 text-emerald-700 border-emerald-200/60',
+  warning: 'bg-amber-50   text-amber-700   border-amber-200/70',
+  danger:  'bg-red-50     text-red-700     border-red-200/60',
 };
 
 const dotClasses: Record<BadgeVariant, string> = {
-  primary: 'bg-primary-500',
-  neutral: 'bg-neutral-400',
-  success: 'bg-success-500',
-  warning: 'bg-warning-500 animate-pulse',
-  danger: 'bg-danger-500',
+  primary: 'bg-indigo-500',
+  neutral: 'bg-gray-400',
+  success: 'bg-emerald-500',
+  warning: 'bg-amber-500 animate-pulse',
+  danger:  'bg-red-500',
 };
 
 const sizeClasses: Record<BadgeSize, string> = {
-  sm: 'text-[11px] px-2 py-0.5 font-medium leading-tight',
-  md: 'text-xs px-2.5 py-1 font-medium leading-none',
+  sm: 'text-[11px] px-2    py-0.5 font-medium leading-tight',
+  md: 'text-xs     px-2.5  py-1   font-medium leading-none',
 };
 
 export const Badge: React.FC<BadgeProps> = ({
-  variant = 'primary',
-  size = 'md',
-  dot = false,
-  pill = true,
+  variant  = 'primary',
+  size     = 'md',
+  dot      = false,
+  pill     = true,
   leftIcon,
   children,
   className = '',
   ...props
-}) => {
-  return (
-    <span
-      className={`
-        inline-flex items-center gap-1.5 border transition-colors select-none
-        ${variantClasses[variant]}
-        ${sizeClasses[size]}
-        ${pill ? 'rounded-full' : 'rounded-md'}
-        ${className}
-      `}
-      {...props}
-    >
-      {dot && (
-        <span
-          className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotClasses[variant]}`}
-          aria-hidden="true"
-        />
-      )}
-      {leftIcon && <span className="inline-flex shrink-0 items-center">{leftIcon}</span>}
-      <span>{children}</span>
-    </span>
-  );
-};
+}) => (
+  <span
+    className={`
+      inline-flex items-center gap-1.5 border transition-colors select-none
+      ${variantClasses[variant]}
+      ${sizeClasses[size]}
+      ${pill ? 'rounded-full' : 'rounded-md'}
+      ${className}
+    `}
+    {...props}
+  >
+    {dot && (
+      <span
+        className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotClasses[variant]}`}
+        aria-hidden="true"
+      />
+    )}
+    {leftIcon && <span className="inline-flex shrink-0 items-center">{leftIcon}</span>}
+    <span>{children}</span>
+  </span>
+);

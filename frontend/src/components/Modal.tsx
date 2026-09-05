@@ -61,7 +61,7 @@ export const Modal: React.FC<ModalProps> = ({
     >
       {/* Backdrop overlay */}
       <div
-        className="fixed inset-0 bg-neutral-900/50 backdrop-blur-sm transition-opacity duration-200"
+        className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity duration-200"
         onClick={closeOnOutsideClick ? onClose : undefined}
         aria-hidden="true"
       />
@@ -70,8 +70,8 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         ref={modalRef}
         className={`
-          relative w-full ${sizeClasses[size]} bg-white rounded-2xl shadow-modal border border-neutral-200/90
-          flex flex-col max-h-[90vh] overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-150
+          relative w-full ${sizeClasses[size]} bg-white rounded-2xl shadow-xl border border-gray-200/80
+          flex flex-col max-h-[90vh] overflow-hidden z-10 animate-slide-up
         `}
       >
         {/* Header */}
@@ -89,7 +89,7 @@ export const Modal: React.FC<ModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg p-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
             aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -99,13 +99,13 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* Scrollable Body Content */}
-        <div className="px-6 py-5 overflow-y-auto flex-1 text-sm text-neutral-700">
+        <div className="px-6 py-5 overflow-y-auto flex-1 text-sm text-gray-700">
           {children}
         </div>
 
         {/* Optional Footer */}
         {footer && (
-          <div className="px-6 py-4 bg-neutral-50/60 border-t border-neutral-100 flex items-center justify-end gap-3 rounded-b-2xl">
+          <div className="px-6 py-4 bg-gray-50/60 border-t border-gray-100 flex items-center justify-end gap-3 rounded-b-2xl">
             {footer}
           </div>
         )}

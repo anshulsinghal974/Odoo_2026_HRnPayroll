@@ -1,6 +1,6 @@
 // Mock Payrun API client
 import type { SalaryStructure, Payrun } from '../types';
-import { apiClient } from './client'; // placeholder for real client; not used for mock
+// apiClient reserved for real backend integration
 
 // Mock data
 let salaryStructures: SalaryStructure[] = [
@@ -63,7 +63,7 @@ export const markPayrunPaid = async (id: string): Promise<Payrun> => {
   return p as Payrun;
 };
 
-export const sendPayrun = async (id: string): Promise<void> => {
+export const sendPayrun = async (_id: string): Promise<void> => {
   await new Promise(r => setTimeout(r, 150));
   // placeholder for sending logic
   return;

@@ -110,7 +110,7 @@ export async function getPayslip(id: string): Promise<Payslip> {
     const res = await apiClient.get<Payslip>(`/payslips/${id}`);
     return res.data;
   } catch {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         const found = mockPayslipsStore.find((p) => p.id === id || p.employeeId === id);
         if (found) {

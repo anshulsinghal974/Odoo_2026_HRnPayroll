@@ -65,7 +65,7 @@ export const NlpChatWidget: React.FC = () => {
       {/* Floating Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white font-semibold text-sm rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary-400"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-400"
         aria-label="Open AI Assistant"
       >
         <span className="text-lg">💬</span>
@@ -75,16 +75,16 @@ export const NlpChatWidget: React.FC = () => {
 
       {/* Floating Chat Drawer Window */}
       {isOpen && (
-        <div className="fixed bottom-22 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl border border-neutral-200 flex flex-col h-[520px] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-22 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col h-[520px] overflow-hidden animate-slide-up">
           {/* Header */}
-          <div className="p-4 bg-gradient-to-r from-primary-900 via-primary-800 to-indigo-900 text-white flex justify-between items-center">
+          <div className="p-4 bg-gray-900 text-white flex justify-between items-center">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
                 🤖
               </div>
               <div>
                 <h3 className="text-sm font-bold tracking-tight">PeoplePay NLP Assistant</h3>
-                <span className="text-[10px] text-primary-200 font-medium">Powered by ML Natural Language Engine</span>
+                <span className="text-[10px] text-indigo-300 font-medium">Powered by ML Natural Language Engine</span>
               </div>
             </div>
             <button
@@ -96,7 +96,7 @@ export const NlpChatWidget: React.FC = () => {
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-neutral-50/50">
+          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50/50">
             {messages.map((m) => {
               const isUser = m.sender === 'user';
               return (
@@ -107,13 +107,13 @@ export const NlpChatWidget: React.FC = () => {
                   <div
                     className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed ${
                       isUser
-                        ? 'bg-primary-600 text-white rounded-br-none shadow-sm'
-                        : 'bg-white text-neutral-800 border border-neutral-200/90 rounded-bl-none shadow-sm'
+                        ? 'bg-indigo-600 text-white rounded-br-none shadow-sm'
+                        : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none shadow-sm'
                     }`}
                   >
                     <p>{m.text}</p>
                     {m.confidence && (
-                      <span className="mt-1 block text-[10px] text-neutral-400 font-mono">
+                      <span className="mt-1 block text-[10px] text-gray-400 font-mono">
                         Model Confidence: {Math.round(m.confidence * 100)}%
                       </span>
                     )}
@@ -126,7 +126,7 @@ export const NlpChatWidget: React.FC = () => {
                         <button
                           key={idx}
                           onClick={() => handleSend(action)}
-                          className="text-[11px] font-medium px-2.5 py-1 bg-white hover:bg-primary-50 text-primary-700 border border-primary-200 rounded-full transition-colors shadow-2xs"
+                          className="text-[11px] font-medium px-2.5 py-1 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full transition-colors shadow-xs"
                         >
                           ⚡ {action}
                         </button>
@@ -134,14 +134,14 @@ export const NlpChatWidget: React.FC = () => {
                     </div>
                   )}
 
-                  <span className="text-[10px] text-neutral-400 mt-1 px-1">{m.timestamp}</span>
+                  <span className="text-[10px] text-gray-400 mt-1 px-1">{m.timestamp}</span>
                 </div>
               );
             })}
 
             {nlpMutation.isPending && (
-              <div className="flex items-center gap-2 text-xs text-neutral-500 bg-white p-2.5 rounded-xl border border-neutral-200 w-fit">
-                <span className="w-2 h-2 rounded-full bg-primary-600 animate-ping" />
+              <div className="flex items-center gap-2 text-xs text-gray-500 bg-white p-2.5 rounded-xl border border-gray-200 w-fit">
+                <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
                 Processing NLP query...
               </div>
             )}
@@ -153,19 +153,19 @@ export const NlpChatWidget: React.FC = () => {
               e.preventDefault();
               handleSend();
             }}
-            className="p-3 bg-white border-t border-neutral-200 flex gap-2"
+            className="p-3 bg-white border-t border-gray-200 flex gap-2"
           >
             <input
               type="text"
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
               placeholder="Ask anything (e.g. Q4 budget)..."
-              className="flex-1 text-xs rounded-xl border border-neutral-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-neutral-50"
+              className="flex-1 text-xs rounded-xl border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50"
             />
             <button
               type="submit"
               disabled={!inputQuery.trim() || nlpMutation.isPending}
-              className="px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold disabled:opacity-50 transition-colors shrink-0"
+              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold disabled:opacity-50 transition-colors shrink-0"
             >
               Send
             </button>

@@ -11,10 +11,6 @@ import { TimeOffPage } from '../features/timeoff';
 import { AttendancePage } from '../features/attendance';
 import { PayrunWizard, PayrunProcessing, PayslipDetail } from '../features/payroll';
 import { PayrollDashboard } from '../features/dashboard';
-import {
-  PayrollPlaceholder,
-  ReportsPlaceholder,
-} from '../features/placeholders/Placeholders';
 import { PlaygroundPage } from '../features/playground/PlaygroundPage';
 
 export function App() {

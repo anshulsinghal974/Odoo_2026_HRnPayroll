@@ -19,12 +19,12 @@ const sizeClasses: Record<SpinnerSize, string> = {
 };
 
 const colorClasses: Record<SpinnerColor, string> = {
-  primary: 'border-primary-200 border-t-primary-600',
-  neutral: 'border-neutral-200 border-t-neutral-600',
-  success: 'border-success-200 border-t-success-600',
-  warning: 'border-warning-200 border-t-warning-600',
-  danger: 'border-danger-200 border-t-danger-600',
-  white: 'border-white/30 border-t-white',
+  primary: 'border-indigo-200 border-t-indigo-600',
+  neutral: 'border-gray-200 border-t-gray-600',
+  success: 'border-emerald-200 border-t-emerald-600',
+  warning: 'border-amber-200 border-t-amber-600',
+  danger:  'border-red-200 border-t-red-600',
+  white:   'border-white/30 border-t-white',
 };
 
 export const Spinner: React.FC<SpinnerProps> = ({
@@ -40,7 +40,7 @@ export const Spinner: React.FC<SpinnerProps> = ({
         aria-hidden="true"
       />
       {label && (
-        <span className="text-xs font-medium text-neutral-600">{label}</span>
+        <span className="text-xs font-medium text-gray-600">{label}</span>
       )}
       <span className="sr-only">{label || 'Loading...'}</span>
     </div>

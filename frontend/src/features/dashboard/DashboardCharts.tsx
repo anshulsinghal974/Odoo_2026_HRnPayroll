@@ -42,7 +42,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               <XAxis dataKey="department" tick={{ fontSize: 11, fill: '#64748b' }} interval={0} angle={-15} textAnchor="end" />
               <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(val) => `$${val / 1000}k`} />
               <Tooltip
-                formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
+                formatter={(value) => [`$${Number(value).toLocaleString()}`, '']}
                 contentStyle={{ borderRadius: '8px', border: '1px solid #cbd5e1', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
               />
               <Legend wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }} />
@@ -71,7 +71,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#64748b' }} />
               <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(val) => `$${val / 1000}k`} />
               <Tooltip
-                formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
+                formatter={(value) => [`$${Number(value).toLocaleString()}`, '']}
                 contentStyle={{ borderRadius: '8px', border: '1px solid #cbd5e1', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
               />
               <Legend wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }} />
