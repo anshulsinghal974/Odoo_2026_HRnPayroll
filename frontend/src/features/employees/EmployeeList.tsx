@@ -24,8 +24,12 @@ import {
   RefreshCw,
   AlertCircle,
 } from 'lucide-react';
+import { useAuth } from '../auth';
 
 export const EmployeeList: React.FC = () => {
+  const { role } = useAuth();
+  const isManagerRole = role === 'Admin' || role === 'HR Manager' || role === 'HR Payroll Manager';
+
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
   const [searchQuery, setSearchQuery] = useState('');
@@ -256,6 +260,7 @@ export const EmployeeList: React.FC = () => {
                   <th className="px-4 py-3">Manager</th>
                   <th className="px-4 py-3">Contact</th>
                   <th className="px-4 py-3">Status</th>
+                  {isManagerRole && <th className="px-4 py-3">Attrition Risk (ML)</th>}
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -328,6 +333,24 @@ export const EmployeeList: React.FC = () => {
                         {emp.status}
                       </Badge>
                     </td>
+
+                    {isManagerRole && (
+                      <td className="px-4 py-3">
+                        {emp.id === 'emp-105' ? (
+                          <Badge variant="danger" size="sm" dot>
+                            High (78%)
+                          </Badge>
+                        ) : emp.id === 'emp-103' ? (
+                          <Badge variant="warning" size="sm" dot>
+                            Medium (42%)
+                          </Badge>
+                        ) : (
+                          <Badge variant="neutral" size="sm">
+                            Low (&lt;20%)
+                          </Badge>
+                        )}
+                      </td>
+                    )}
 
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <button

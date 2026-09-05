@@ -7,3 +7,5 @@ export * from './Modal';
 export * from './Spinner';
 export * from './EmptyState';
 export * from './Alert';
+export * from './NlpChatWidget';
+

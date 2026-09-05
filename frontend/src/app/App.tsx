@@ -9,8 +9,8 @@ import { EmployeeList } from '../features/employees';
 import { ContractsPage } from '../features/contracts';
 import { TimeOffPage } from '../features/timeoff';
 import { AttendancePage } from '../features/attendance';
-import { PayrunWizard } from '../features/payroll/PayrunWizard';
-import { PayrunProcessing } from '../features/payroll/PayrunProcessing';
+import { PayrunWizard, PayrunProcessing, PayslipDetail } from '../features/payroll';
+import { PayrollDashboard } from '../features/dashboard';
 import {
   PayrollPlaceholder,
   ReportsPlaceholder,
@@ -38,8 +38,11 @@ export function App() {
           <Route path="/contracts" element={<ContractsPage />} />
           <Route path="/attendance" element={<AttendancePage />} />
           <Route path="/time-off" element={<TimeOffPage />} />
+          <Route path="/dashboard" element={<PayrollDashboard />} />
+          <Route path="/reports" element={<PayrollDashboard />} />
           <Route path="/payroll" element={<PayrunWizard />} />
           <Route path="/payroll/:payrunId" element={<PayrunProcessing />} />
+          <Route path="/payroll/payslips/:payslipId" element={<PayslipDetail />} />
         </Route>
 
         {/* ── Catch-all ─────────────────────────────────────────────────── */}

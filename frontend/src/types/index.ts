@@ -175,6 +175,120 @@ export interface Payrun extends BaseEntity {
 
 export type CreatePayrunInput = Omit<Payrun, 'id' | 'createdAt' | 'updatedAt'>;
 
+// Payslip types
+export type PayslipCategory = 'Basic' | 'Allowances' | 'Gross' | 'Deductions' | 'Net';
+
+export interface PayslipLine {
+  id: string;
+  code: string;
+  name: string;
+  category: PayslipCategory;
+  amount: number;
+}
+
+export interface Payslip extends BaseEntity {
+  payrunId: string;
+  employeeId: string;
+  employeeName: string;
+  employeeEmail?: string;
+  department?: string;
+  jobPosition?: string;
+  periodStart: string;
+  periodEnd: string;
+  status: PayrunStatus | 'Sent';
+  lines: PayslipLine[];
+  basicTotal: number;
+  allowancesTotal: number;
+  grossTotal: number;
+  deductionsTotal: number;
+  netTotal: number;
+}
+
+// Dashboard types
+export interface DashboardFilter {
+  period: string;
+  department: string;
+  employeeType: string;
+}
+
+export interface DashboardKpi {
+  totalNetSalary: number;
+  payslipsGenerated: number;
+  averageSalary: number;
+  approvedTimeOffDays: number;
+  totalNetSalaryChange: string;
+  payslipsChange: string;
+  avgSalaryChange: string;
+  timeOffChange: string;
+}
+
+export interface DepartmentSalaryCost {
+  department: string;
+  basic: number;
+  allowances: number;
+  deductions: number;
+  netSalary: number;
+}
+
+export interface MonthlyNetSalaryTrend {
+  month: string;
+  grossSalary: number;
+  netSalary: number;
+}
+
+export interface DashboardAlert {
+  id: string;
+  type: 'warning' | 'danger' | 'info';
+  title: string;
+  description: string;
+  department?: string;
+  timestamp: string;
+}
+
+export interface DashboardAggregationData {
+  kpis: DashboardKpi;
+  departmentCosts: DepartmentSalaryCost[];
+  monthlyTrend: MonthlyNetSalaryTrend[];
+  alerts: DashboardAlert[];
+}
+
+// ML & NLP Types
+export interface AttendanceHealthScore {
+  score: number; // 0 - 100
+  status: 'Healthy' | 'Moderate' | 'Warning';
+  onTimeRate: number; // percentage
+  anomalyCount: number;
+  summary: string;
+}
+
+export interface LeavePrediction {
+  predictedDays: number;
+  peakWindow: string;
+  highRiskEmployeesCount: number;
+  recommendation: string;
+}
+
+export interface SalaryForecastPoint {
+  month: string;
+  actual?: number;
+  projected: number;
+}
+
+export interface NlpQueryResult {
+  answer: string;
+  confidence: number;
+  suggestedActions?: string[];
+}
+
+export interface EmployeeAttritionRisk {
+  employeeId: string;
+  riskScore: number; // percentage
+  riskLevel: 'Low' | 'Medium' | 'High';
+  keyFactors: string[];
+}
+
+
+
 // Attendance types
 export type AttendanceStatus = 'On Time' | 'Late' | 'Absent' | 'Overtime' | 'Missing Check-out';
 

@@ -8,6 +8,16 @@ import { Badge } from '../components';
 
 const NAV_LINKS = [
   {
+    to: '/dashboard',
+    label: 'Dashboard',
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+      </svg>
+    ),
+  },
+  {
     to: '/employees',
     label: 'Employees',
     icon: (
@@ -78,9 +88,23 @@ const ROLE_BADGE: Record<string, 'primary' | 'success' | 'warning' | 'neutral'> 
   Employee: 'neutral',
 };
 
+import { useRBAC } from '../hooks/useRBAC';
+
 export function TopNav() {
   const { user, logout } = useAuth();
+  const { canAccessModule } = useRBAC();
   const navigate = useNavigate();
+
+  const visibleNavLinks = NAV_LINKS.filter((link) => {
+    if (link.to === '/dashboard' || link.to === '/reports') return canAccessModule('dashboard');
+    if (link.to === '/employees') return canAccessModule('employees');
+    if (link.to === '/contracts') return canAccessModule('contracts');
+    if (link.to === '/attendance') return canAccessModule('attendance');
+    if (link.to === '/time-off') return canAccessModule('time-off');
+    if (link.to === '/payroll') return canAccessModule('payroll');
+    return true;
+  });
+
 
   const handleLogout = () => {
     logout();
@@ -110,7 +134,7 @@ export function TopNav() {
 
           {/* Nav Links */}
           <nav className="flex items-center gap-0.5 flex-1 overflow-x-auto scrollbar-none">
-            {NAV_LINKS.map((link) => (
+            {visibleNavLinks.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
