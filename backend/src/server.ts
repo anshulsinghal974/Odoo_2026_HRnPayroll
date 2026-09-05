@@ -10,6 +10,7 @@ import timeoffRoutes from './modules/timeoff/timeoff.routes';
 import attendanceRoutes from './modules/attendance/attendance.routes';
 import salaryRoutes from './modules/payroll/salary.routes';
 import payrunRoutes from './modules/payrun/payrun.routes';
+import dashboardRoutes from './modules/dashboard/dashboard.routes';
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ app.use('/api', timeoffRoutes);
 app.use('/api/attendances', attendanceRoutes);
 app.use('/api', salaryRoutes);
 app.use('/api', payrunRoutes);
+app.use('/api', dashboardRoutes);
 
 // ──────────────────────────────────────────────
 // Global error handler
