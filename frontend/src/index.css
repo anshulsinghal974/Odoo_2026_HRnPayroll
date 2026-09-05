@@ -17,9 +17,11 @@
     width: 6px;
     height: 6px;
   }
+
   ::-webkit-scrollbar-track {
     background: transparent;
   }
+
   ::-webkit-scrollbar-thumb {
     @apply bg-neutral-300 rounded-full hover:bg-neutral-400 transition-colors;
   }
@@ -31,7 +33,7 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
-  
+
   .glass-dark {
     background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(12px);
