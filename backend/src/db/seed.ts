@@ -131,20 +131,20 @@ async function main() {
     schedule = await prisma.workingSchedule.create({
       data: {
         name: 'Standard 5×8',
-        weeklyHours: 40,
+        totalHours: 40,
         lines: {
           create: [
-            { dayOfWeek: 'MONDAY',    hourFrom: 9, hourTo: 18 },
-            { dayOfWeek: 'TUESDAY',   hourFrom: 9, hourTo: 18 },
-            { dayOfWeek: 'WEDNESDAY', hourFrom: 9, hourTo: 18 },
-            { dayOfWeek: 'THURSDAY',  hourFrom: 9, hourTo: 18 },
-            { dayOfWeek: 'FRIDAY',    hourFrom: 9, hourTo: 18 },
+            { day: 'MONDAY',    startTime: '09:00', endTime: '18:00', breakMins: 60 },
+            { day: 'TUESDAY',   startTime: '09:00', endTime: '18:00', breakMins: 60 },
+            { day: 'WEDNESDAY', startTime: '09:00', endTime: '18:00', breakMins: 60 },
+            { day: 'THURSDAY',  startTime: '09:00', endTime: '18:00', breakMins: 60 },
+            { day: 'FRIDAY',    startTime: '09:00', endTime: '18:00', breakMins: 60 },
           ],
         },
       },
     });
   }
-  console.log(`  ✅ Schedule: ${schedule.name} (${schedule.weeklyHours}h/week)`);
+  console.log(`  ✅ Schedule: ${schedule.name} (${schedule.totalHours}h/week)`);
 
   // ── 3. SALARY STRUCTURE ──────────────────────
 
@@ -321,7 +321,8 @@ async function main() {
         name: 'Annual Leave',
         unit: TimeOffUnit.DAYS,
         approvalMode: ApprovalMode.HR_APPROVAL,
-        allowNegative: false,
+        requiresAllocation: true,
+        carryOver: false,
       },
     });
   }
@@ -337,7 +338,10 @@ async function main() {
         employeeId,
         typeId: leaveType.id,
         numberOfDays: 21,
+        taken: 2,
         remaining: 19,
+        dateFrom: new Date(now.getFullYear(), 0, 1),   // Jan 1 of current year
+        dateTo: new Date(now.getFullYear(), 11, 31),   // Dec 31 of current year
         status: AllocationStatus.APPROVED,
         notes: 'Annual leave allocation — demo seed',
       },
