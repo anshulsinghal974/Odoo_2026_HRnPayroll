@@ -218,9 +218,8 @@ export const ScheduleForm: React.FC<ScheduleFormProps> = ({
                     return (
                       <tr
                         key={d.day}
-                        className={`transition-colors ${
-                          d.isWorkDay ? 'bg-white' : 'bg-neutral-50/60 opacity-70'
-                        }`}
+                        className={`transition-colors ${d.isWorkDay ? 'bg-white' : 'bg-neutral-50/60 opacity-70'
+                          }`}
                       >
                         <td className="px-4 py-3">
                           <input
