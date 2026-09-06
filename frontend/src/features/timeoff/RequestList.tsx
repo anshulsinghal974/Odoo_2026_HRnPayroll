@@ -9,6 +9,7 @@ import {
   getTimeOffTypes,
 } from '../../api/timeoff';
 import { Button, Card, CardContent, Badge, Spinner, Modal } from '../../components';
+import { useAuth } from '../auth';
 import {
   CheckCircle2,
   XCircle,
@@ -21,11 +22,16 @@ import {
 
 export const RequestList: React.FC = () => {
   const queryClient = useQueryClient();
+  const { user, role } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // New Request Form State
-  const [employeeName, setEmployeeName] = useState('Sarah Connor');
-  const [employeeId] = useState('emp-101');
+  // Determine if logged-in user can approve/refuse requests (HR roles only)
+  const canApprove = role === 'Admin' || role === 'HR Manager' || role === 'HR Payroll Manager';
+
+  // Use the actual logged-in user's info — not hardcoded
+  const employeeId = user?.employeeId ?? 'emp-101';
+  const employeeName = user?.name ?? '';
+
   const [timeOffTypeId, setTimeOffTypeId] = useState('tot-1');
   const [startDate, setStartDate] = useState('2026-08-10');
   const [endDate, setEndDate] = useState('2026-08-14');
@@ -92,7 +98,7 @@ export const RequestList: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold text-neutral-800 flex items-center gap-2">
-            <PieChart className="w-4 h-4 text-primary-600" /> Leave Balance Overview ({employeeName})
+            <PieChart className="w-4 h-4 text-primary-600" /> Leave Balance Overview ({employeeName || 'Your Account'})
           </h3>
           <span className="text-xs text-neutral-500 font-mono">Employee ID: {employeeId}</span>
         </div>
@@ -238,7 +244,7 @@ export const RequestList: React.FC = () => {
 
                     {/* Approve / Refuse Buttons */}
                     <td className="px-4 py-3 text-right">
-                      {req.status === 'Pending' ? (
+                      {req.status === 'Pending' && canApprove ? (
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() =>
@@ -259,7 +265,7 @@ export const RequestList: React.FC = () => {
                         </div>
                       ) : (
                         <span className="text-neutral-400 italic text-[11px]">
-                          {req.status === 'Approved' ? 'Approved' : 'Refused'}
+                          {req.status === 'Pending' ? 'Awaiting approval' : req.status}
                         </span>
                       )}
                     </td>
@@ -278,18 +284,11 @@ export const RequestList: React.FC = () => {
         title="Submit Time Off Request"
       >
         <form onSubmit={handleCreateSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-neutral-700 mb-1">
-              Employee Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={employeeName}
-              onChange={(e) => setEmployeeName(e.target.value)}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
-              placeholder="e.g. Sarah Connor"
-            />
+          {/* Show who is submitting — read-only, from logged-in user */}
+          <div className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg">
+            <User className="w-4 h-4 text-neutral-400" />
+            <span className="text-sm font-medium text-neutral-700">{employeeName}</span>
+            <span className="text-xs text-neutral-400 font-mono ml-auto">{employeeId}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

@@ -38,6 +38,9 @@ export const EmployeeList: React.FC = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
+  // Only Admin, HR Manager, HR Payroll Manager can create/edit employees
+  const canEditEmployees = role === 'Admin' || role === 'HR Manager' || role === 'HR Payroll Manager';
+
   // React Query setup for getEmployees
   const {
     data: employees = [],
@@ -156,14 +159,16 @@ export const EmployeeList: React.FC = () => {
             </button>
           </div>
 
-          <Button
-            onClick={() => {
-              setSelectedEmployee(null);
-              setIsFormOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4 mr-1.5" /> Create Employee
-          </Button>
+          {canEditEmployees && (
+            <Button
+              onClick={() => {
+                setSelectedEmployee(null);
+                setIsFormOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-1.5" /> Create Employee
+            </Button>
+          )}
         </div>
       </div>
 
@@ -270,6 +275,7 @@ export const EmployeeList: React.FC = () => {
                     key={emp.id}
                     className="hover:bg-neutral-50/80 transition-colors group cursor-pointer"
                     onClick={() => {
+                      if (!canEditEmployees) return;
                       setSelectedEmployee(emp);
                       setIsFormOpen(true);
                     }}
@@ -353,16 +359,20 @@ export const EmployeeList: React.FC = () => {
                     )}
 
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => {
-                          setSelectedEmployee(emp);
-                          setIsFormOpen(true);
-                        }}
-                        className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-neutral-100 rounded-lg transition-colors"
-                        title="Edit Employee"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
+                      {canEditEmployees ? (
+                        <button
+                          onClick={() => {
+                            setSelectedEmployee(emp);
+                            setIsFormOpen(true);
+                          }}
+                          className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-neutral-100 rounded-lg transition-colors"
+                          title="Edit Employee"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <span className="text-xs text-neutral-400 italic">View only</span>
+                      )}
                     </td>
                   </tr>
                 ))}
