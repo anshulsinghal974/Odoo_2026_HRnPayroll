@@ -4,4 +4,4 @@ pydantic
 scikit-learn
 statsmodels
 pandas
-google-generativeai
+google-genai
