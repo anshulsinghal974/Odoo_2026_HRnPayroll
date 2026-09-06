@@ -4,6 +4,9 @@ from app.routers import warnings, anomalies, forecast, risk, nlp, predictions
 from app.schemas import HealthResponse
 import sys
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Add parent directory to path to import seed script
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
