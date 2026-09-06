@@ -11,6 +11,7 @@ import attendanceRoutes from './modules/attendance/attendance.routes';
 import salaryRoutes from './modules/payroll/salary.routes';
 import payrunRoutes from './modules/payrun/payrun.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
+import mlRoutes from './modules/ml/ml.routes';
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ app.use('/api/attendances', attendanceRoutes);
 app.use('/api', salaryRoutes);
 app.use('/api', payrunRoutes);
 app.use('/api', dashboardRoutes);
+app.use('/api', mlRoutes);
 
 // ──────────────────────────────────────────────
 // Global error handler

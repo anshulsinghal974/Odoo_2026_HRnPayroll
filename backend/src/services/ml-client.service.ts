@@ -27,37 +27,41 @@ const ML_TIMEOUT_MS = parseInt(process.env.ML_SERVICE_TIMEOUT_MS ?? '5000', 10);
 
 // ──────────────────────────────────────────────
 // RESPONSE SHAPES
-// Extend / modify these when Person 3 documents the actual contract.
 // ──────────────────────────────────────────────
 
 export interface MlPayrunReadinessResponse {
-  readinessScore: number;          // 0–100
-  warnings: MlWarning[];
+  readiness_score: number;
+  readiness_label: string;
+  warnings: any[];
 }
 
-export interface MlWarning {
-  type: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  message: string;
-  employeeId?: string;
+export interface MlAttendanceHealthResponse {
+  employee_scores: any[];
+  department_scores: any[];
 }
 
-export interface MlAttritionRiskEmployee {
-  employeeId: string;
-  riskScore: number;    // 0–1
-  reasons: string[];
+export interface MlLeavePredictionResponse {
+  department_id: string;
+  target_month: string;
+  expected_leave_days: number;
+}
+
+export interface MlSalaryForecastResponse {
+  department_id: string;
+  projected_cost: number;
+  confidence_interval: number[];
 }
 
 export interface MlAttritionRiskResponse {
-  employees: MlAttritionRiskEmployee[];
+  employee_id: string;
+  risk_level: string;
+  factors: string[];
 }
 
-export interface MlAnomalyDetectionResponse {
-  anomalies: Array<{
-    payslipId: string;
-    reason: string;
-    confidence: number;
-  }>;
+export interface MlNlpQueryResponse {
+  answer: string;
+  raw_sql: string;
+  confidence: number;
 }
 
 // ──────────────────────────────────────────────
@@ -184,72 +188,42 @@ async function mlGet<TRes>(path: string): Promise<TRes | null> {
 // All functions return a safe fallback if ML is unreachable.
 // ──────────────────────────────────────────────
 
-/**
- * POST /api/warnings/payrun-readiness
- * Returns readiness score + ML-generated warnings for a payrun.
- * Fallback: { readinessScore: 100, warnings: [] }
- */
-export async function getPayrunReadiness(
-  payrunId: string
-): Promise<MlPayrunReadinessResponse> {
-  const result = await mlPost<{ payrunId: string }, MlPayrunReadinessResponse>(
-    '/api/warnings/payrun-readiness',
-    { payrunId }
-  );
-
-  if (!result) {
-    return { readinessScore: 100, warnings: [] };
-  }
-
-  return result;
+export async function getPayrunReadiness(payload: any): Promise<MlPayrunReadinessResponse> {
+  const result = await mlPost<any, MlPayrunReadinessResponse>('/warnings/payrun', payload);
+  return result || { readiness_score: 100, readiness_label: "Green", warnings: [] };
 }
 
-/**
- * POST /api/attrition/predict
- * Returns attrition risk scores for a list of employee IDs.
- * Fallback: { employees: [] }
- */
-export async function getAttritionRisk(
-  employeeIds: string[]
-): Promise<MlAttritionRiskResponse> {
-  const result = await mlPost<{ employeeIds: string[] }, MlAttritionRiskResponse>(
-    '/api/attrition/predict',
-    { employeeIds }
-  );
-
-  if (!result) {
-    return { employees: [] };
-  }
-
-  return result;
+export async function detectAttendanceAnomalies(payload: any): Promise<any> {
+  const result = await mlPost<any, any>('/anomalies/attendance', payload);
+  return result || { anomalies: [] };
 }
 
-/**
- * POST /api/anomaly/payslips
- * Flags payslips with statistically unusual values.
- * Fallback: { anomalies: [] }
- */
-export async function detectPayslipAnomalies(
-  payrunId: string
-): Promise<MlAnomalyDetectionResponse> {
-  const result = await mlPost<{ payrunId: string }, MlAnomalyDetectionResponse>(
-    '/api/anomaly/payslips',
-    { payrunId }
-  );
-
-  if (!result) {
-    return { anomalies: [] };
-  }
-
-  return result;
+export async function getAttendanceHealthScore(payload: any): Promise<MlAttendanceHealthResponse> {
+  const result = await mlPost<any, MlAttendanceHealthResponse>('/anomalies/health', payload);
+  return result || { employee_scores: [], department_scores: [] };
 }
 
-/**
- * GET /api/health
- * Check whether the ML service is reachable.
- * Returns true if reachable, false otherwise.
- */
+export async function getLeavePrediction(dept: string, month: string): Promise<MlLeavePredictionResponse> {
+  const result = await mlGet<MlLeavePredictionResponse>(`/predictions/leave?dept=${encodeURIComponent(dept)}&month=${encodeURIComponent(month)}`);
+  return result || { department_id: dept, target_month: month, expected_leave_days: 0 };
+}
+
+export async function getSalaryForecast(payload: any): Promise<MlSalaryForecastResponse> {
+  const result = await mlPost<any, MlSalaryForecastResponse>('/forecast/salary', payload);
+  return result || { department_id: payload.department_id, projected_cost: 0, confidence_interval: [0, 0] };
+}
+
+export async function getAttritionRisk(payload: any): Promise<MlAttritionRiskResponse> {
+  const result = await mlPost<any, MlAttritionRiskResponse>('/risk/attrition', payload);
+  return result || { employee_id: payload.employee_id, risk_level: "Low", factors: [] };
+}
+
+export async function sendNlpQuery(payload: any): Promise<MlNlpQueryResponse> {
+  const result = await mlPost<any, MlNlpQueryResponse>('/nlp/query', payload);
+  return result || { answer: "ML Service is currently unavailable.", raw_sql: "", confidence: 0 };
+}
+
 export async function isMlServiceHealthy(): Promise<boolean> {
-  const result = await mlGet<unknown>('/api/health');
+  const result = await mlGet<unknown>('/health');
   return result !== null;
 }
