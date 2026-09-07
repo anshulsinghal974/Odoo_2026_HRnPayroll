@@ -42,9 +42,9 @@ interface AttendanceListProps {
 }
 
 export const AttendanceList: React.FC<AttendanceListProps> = ({ employeeId }) => {
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['attendance'],
-    queryFn: getAttendance,
+  const { data = [], isLoading, isError, refetch } = useQuery<Attendance[]>({
+    queryKey: ['attendance', employeeId ?? ''],
+    queryFn: () => getAttendance(employeeId),
   });
 
   const [filterEmployee, setFilterEmployee] = useState(employeeId || '');
@@ -52,7 +52,6 @@ export const AttendanceList: React.FC<AttendanceListProps> = ({ employeeId }) =>
   const [correctionRecord, setCorrectionRecord] = useState<Attendance | null>(null);
 
   const filtered = useMemo(() => {
-    if (!data) return [];
     let list = data;
     if (filterEmployee) {
       list = list.filter((r) => r.employeeId === filterEmployee);
@@ -65,7 +64,6 @@ export const AttendanceList: React.FC<AttendanceListProps> = ({ employeeId }) =>
 
   // Unique employees for dropdown
   const employees = useMemo(() => {
-    if (!data) return [];
     const map = new Map<string, string>();
     data.forEach((r) => map.set(r.employeeId, r.employeeName));
     return Array.from(map.entries());

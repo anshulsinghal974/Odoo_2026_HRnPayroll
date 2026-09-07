@@ -28,7 +28,7 @@ async def process_nlp_query(payload: NLPQueryRequest):
     
     try:
         response = client.models.generate_content(
-            model='gemini-3.6-flash',
+            model='gemini-1.5-flash',
             contents=prompt
         )
         text = response.text

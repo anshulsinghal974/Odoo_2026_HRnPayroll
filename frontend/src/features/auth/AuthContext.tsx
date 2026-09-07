@@ -1,5 +1,5 @@
 // AuthContext — stores JWT token + decoded AuthUser in memory.
-// Token is also persisted to localStorage for page refreshes.
+// Token is persisted in localStorage; session rehydrated via GET /api/auth/me on mount.
 
 import {
   createContext,
@@ -10,56 +10,53 @@ import {
   type ReactNode,
 } from 'react';
 import type { AuthUser, UserRole, LoginCredentials } from '../../types';
-import { mockLogin, decodeMockToken } from '../../api/auth';
+import { loginWithBackend, fetchCurrentUser } from '../../api/auth';
 
 // ─── Context Shape ─────────────────────────────────────────────────────────────
 interface AuthContextValue {
-  /** The decoded user object, or null if not logged in */
-  user: AuthUser | null;
-  /** Raw JWT string, or null if not logged in */
-  token: string | null;
-  /** Current role, or null */
-  role: UserRole | null;
-  /** True while login or token hydration is in progress */
-  isLoading: boolean;
-  /** Login with email + password. Throws on invalid credentials. */
-  login: (credentials: LoginCredentials) => Promise<void>;
-  /** Clears token + user from memory and localStorage */
-  logout: () => void;
-  /** True if there is a valid authenticated session */
+  user:            AuthUser | null;
+  token:           string | null;
+  role:            UserRole | null;
+  isLoading:       boolean;
+  login:           (credentials: LoginCredentials) => Promise<void>;
+  logout:          () => void;
   isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-// ─── Provider ──────────────────────────────────────────────────────────────────
 const TOKEN_KEY = 'pp360_token';
 
+// ─── Provider ──────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // starts true to hydrate on mount
+  const [user,      setUser]      = useState<AuthUser | null>(null);
+  const [token,     setToken]     = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // On mount: restore session from localStorage
+  // On mount — rehydrate session from stored token via /api/auth/me
   useEffect(() => {
     const stored = localStorage.getItem(TOKEN_KEY);
-    if (stored) {
-      const decoded = decodeMockToken(stored);
-      if (decoded) {
-        setToken(stored);
-        setUser(decoded);
-      } else {
-        // Token corrupt or expired — clear it
-        localStorage.removeItem(TOKEN_KEY);
-      }
+    if (!stored) {
+      setIsLoading(false);
+      return;
     }
-    setIsLoading(false);
+
+    // Token exists — verify it with the backend and get full user profile
+    setToken(stored);
+    fetchCurrentUser()
+      .then((profile) => setUser(profile))
+      .catch(() => {
+        // Token expired or invalid — clear it
+        localStorage.removeItem(TOKEN_KEY);
+        setToken(null);
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     setIsLoading(true);
     try {
-      const { token: newToken, user: newUser } = await mockLogin(credentials);
+      const { token: newToken, user: newUser } = await loginWithBackend(credentials);
       localStorage.setItem(TOKEN_KEY, newToken);
       setToken(newToken);
       setUser(newUser);
@@ -77,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = {
     user,
     token,
-    role: user?.role ?? null,
+    role:            user?.role ?? null,
     isLoading,
     login,
     logout,
@@ -90,8 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 // ─── Hook ──────────────────────────────────────────────────────────────────────
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error('useAuth must be used inside <AuthProvider>');
-  }
+  if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
   return ctx;
 }
